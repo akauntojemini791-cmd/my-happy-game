@@ -1,0 +1,1094 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>落ちたら最初からの世界 3D 3D</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#071426;color:white;font-family:Arial,sans-serif;overflow:hidden}
+canvas{width:100vw;height:100vh;display:block}
+.panel{position:fixed;background:#102743ed;border:2px solid #4386b8;border-radius:14px;padding:12px;box-shadow:0 5px 20px #0006}
+#hud{top:12px;left:12px;min-width:230px;line-height:1.9}
+#hud h2{font-size:17px;margin:0 0 5px;color:#70e6ff}
+.value{float:right;color:#ffe18a;font-weight:bold}
+#buttons{position:fixed;right:12px;top:12px;display:flex;gap:6px}
+#cameraBtn{position:fixed;right:14px;top:94px;z-index:11;min-width:150px;background:linear-gradient(135deg,#155b88,#2489b7);border:2px solid #9beaff;box-shadow:0 4px 16px #0008;font-size:14px}
+#abilityBtn{position:fixed;right:18px;bottom:22px;z-index:12;min-width:190px;min-height:58px;padding:14px 18px;border:2px solid #fff09a;border-radius:16px;background:linear-gradient(135deg,#a75a08,#ed9c19);color:#fff;font-size:16px;box-shadow:0 5px 20px #0009;touch-action:manipulation}
+#abilityBtn:hover{background:linear-gradient(135deg,#d5790b,#ffc247)}
+body.tap #abilityBtn{display:none}
+@media(max-width:650px){#abilityBtn{right:10px;bottom:12px;min-width:150px;min-height:54px;font-size:14px;padding:10px 12px}}
+button{border:1px solid #6ce7ff;border-radius:9px;padding:10px;background:#14527c;color:white;font-weight:bold;cursor:pointer}
+button:hover{background:#207bad}
+#message{position:fixed;bottom:16px;width:100%;text-align:center;font-weight:bold;text-shadow:0 2px 5px black}
+#result{display:none;position:fixed;inset:0;background:#000b;align-items:center;justify-content:center;padding:15px}
+#resultBox{background:#122a46;border:2px solid #65dfff;border-radius:18px;padding:25px;text-align:center;width:min(420px,95vw)}
+#resultBox h1{color:#ffe18a}
+
+body{touch-action:manipulation;-webkit-user-select:none;user-select:none}
+#touch{display:none;position:fixed;left:0;right:0;bottom:14px;padding:0 14px;justify-content:space-between;align-items:flex-end;pointer-events:none}
+#touch button{pointer-events:auto;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;width:60px;height:60px;padding:0;border-radius:50%;font-size:20px;opacity:.88}
+#touch button:active{background:#2fa5de;transform:scale(.94)}
+#stick{pointer-events:auto;touch-action:none;position:relative;width:140px;height:140px;border-radius:50%;background:#14527c66;border:2px solid #6ce7ffaa}#knob{position:absolute;left:50%;top:50%;width:62px;height:62px;margin:-31px 0 0 -31px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8bf0ff,#1f8fc4);border:2px solid #fff9;pointer-events:none}
+#acts{display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+#acts .jump{width:96px;height:96px;font-size:16px}#acts .dash{width:72px;height:72px;font-size:13px}#acts #touchAbility{width:88px;height:58px;border-radius:14px;font-size:12px}
+body.tap #touch{display:flex}body.tap #message{bottom:200px;font-size:12px;pointer-events:none}
+@media(max-width:650px){#hud{font-size:11px;min-width:160px;padding:6px;line-height:1.5}#hud h2{font-size:14px}#buttons{flex-wrap:wrap;max-width:46vw;justify-content:flex-end;gap:4px}#buttons button{font-size:11px;padding:6px}#cameraBtn{top:104px;right:10px;min-width:124px;font-size:12px;padding:8px}}
+#shop{display:none;position:fixed;inset:0;z-index:50;background:#020817dd;backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:12px}
+#shopBox{background:linear-gradient(145deg,#163958,#0b1b31);border:2px solid #65dfff;border-radius:22px;padding:16px;text-align:center;width:min(820px,98vw);max-height:96vh;overflow:auto;box-shadow:0 18px 70px #000b}
+#shopHead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-bottom:1px solid #65dfff55;padding-bottom:10px}
+#shopHead h2{margin:0;color:#8cecff;font-size:clamp(20px,3vw,27px)}#shopGems{display:inline-block;background:#342b18;border:1px solid #ffe18a;border-radius:12px;padding:7px 12px;color:#ffe18a;font-weight:bold}
+#shopFeature{display:grid;grid-template-columns:180px 1fr;gap:14px;align-items:center;margin:12px 0;padding:10px;background:#06182a99;border:1px solid #ffffff20;border-radius:16px;text-align:left}
+#shopPreview{display:flex;flex-direction:column;align-items:center;text-align:center}#pv{width:160px;height:160px;margin:0 auto;background:radial-gradient(circle,#285778,#10253b 72%);border-radius:16px;max-width:100%}
+#shopName{margin:0 0 7px;font-size:clamp(20px,3vw,27px);color:#fff0a6}#shopDesc{font-size:14px;line-height:1.6;color:#d5e9f7}
+#shopSearch{width:100%;padding:11px 13px;border-radius:10px;border:1px solid #70cfff;background:#071a2c;color:white;font-size:15px;margin:8px 0}
+#shopCount{text-align:left;color:#b8d9ed;font-size:12px;margin:4px 0}
+#shopList{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:8px 0 12px;max-height:36vh;overflow:auto;padding:3px}
+#shopList button{min-width:0;min-height:66px;white-space:normal;text-align:left;line-height:1.35;padding:10px;border:1px solid #4d7898;background:linear-gradient(135deg,#17466b,#102c49);border-radius:12px;font-size:13px;overflow-wrap:anywhere}
+#shopList button .skinName{display:block;font-weight:bold;font-size:14px;color:#fff;margin-bottom:4px}#shopList button .skinMeta{display:block;font-size:11px;color:#c4e6f6}#shopList button.selected{border:2px solid #ffe18a;background:linear-gradient(135deg,#6b5720,#24476a);box-shadow:0 0 12px #ffe18a44}
+#shopActions{display:flex;justify-content:center;gap:9px;flex-wrap:wrap}#shopAct{min-width:170px;background:linear-gradient(135deg,#f3c84b,#e88923);color:#172238;border:0;font-size:15px;padding:12px 18px}#shopClose{background:#29445c;border-color:#7798b0;padding:12px 18px}
+@media(max-width:600px){#shopBox{padding:10px;border-radius:15px}#shopFeature{grid-template-columns:112px 1fr;gap:8px;padding:7px}#pv{width:110px;height:110px}#shopDesc{font-size:12px}#shopList{grid-template-columns:repeat(2,minmax(0,1fr));max-height:38vh;gap:6px}#shopList button{padding:8px;min-height:60px}#shopList button .skinName{font-size:12px}#shopList button .skinMeta{font-size:10px}}
+button:disabled{opacity:.5;cursor:default}#fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .5s;z-index:40}#banner{position:fixed;top:28%;left:0;width:100%;text-align:center;font-size:clamp(22px,5vw,40px);font-weight:bold;color:#ffe18a;text-shadow:0 3px 8px #000;opacity:0;pointer-events:none;transition:opacity .4s;z-index:41}#bossbar{display:none;position:fixed;top:10px;left:50%;transform:translateX(-50%);width:min(340px,34vw);text-align:center;font-weight:bold;text-shadow:0 2px 4px #000;z-index:5}#bossbg{height:14px;background:#0008;border:2px solid #fff;border-radius:8px;overflow:hidden}#bossfill{height:100%;width:100%;background:linear-gradient(#ff6b6b,#d62828);transition:width .3s}</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud" class="panel">
+<h2>🏔️ 落ちたら最初からの世界 3D 3D</h2>
+<div>現在高度 <span class="value" id="height">0 m</span></div>
+<div>最高到達高度 <span class="value" id="record">0 m</span></div>
+<div>ハイスコア <span class="value" id="score">0</span></div>
+<div>現在のスコア <span class="value" id="currentScore">0</span></div>
+<div>転落回数 <span class="value" id="falls">0</span></div>
+<div>挑戦回数 <span class="value" id="attempts">1</span></div>
+<div>クリスタル <span class="value" id="gems">0</span></div>
+<div>撃破数 <span class="value" id="kills">0</span></div>
+<div>パワー <span class="value" id="pw">なし</span></div>
+<div id="glitchHpRow" style="display:none;color:#ff8cf4;font-weight:bold">👾 バグHP <span class="value" id="glitchHp">♥♥♥ 3/3</span></div>
+<div>経過時間 <span class="value" id="time">0.0秒</span></div>
+<div>ベストタイム <span class="value" id="best">--</span></div>
+</div>
+
+<div id="buttons">
+<button onclick="restart()">↻ 最初から</button>
+<button onclick="help()">❔ 操作方法</button>
+<button id="ctrlBtn" onclick="toggleCtrl()"></button>
+<button onclick="openShop()">🛍️ スキン屋</button>
+<button onclick="resetRecords()">記録リセット</button><button id="abilityBtn" onclick="useAbility()">✨ 特性を使う (5)</button><button id="glitchPlatformBtn" onclick="placeGlitchPlatform()" style="display:none;background:linear-gradient(135deg,#ff00e6,#00eaff);color:#101020;border-color:#fff">👾 グリッチ足場を設置 [G]</button>
+</div>
+<button id="cameraBtn" onclick="toggleCameraMode()">📷 俯瞰カメラ</button>
+
+<div id="touch" oncontextmenu="return false"><div id="stick"><div id="knob"></div></div><div id="acts"><button data-key=" " class="jump">ジャンプ</button><button data-key="shift" class="dash">ダッシュ</button><button id="touchAbility" onclick="useAbility()" style="width:88px;height:64px;border-radius:14px;font-size:12px">✨ 特性 (5)</button><button id="touchGlitchPlatform" onclick="placeGlitchPlatform()" style="display:none;width:88px;height:64px;border-radius:14px;font-size:12px;background:linear-gradient(135deg,#ff00e6,#00eaff);color:#101020">👾 足場設置</button></div></div>
+<div id="message">WASD/矢印で移動 SPACEでジャンプ！ 高い壁は空中でもう一度ジャンプ＝壁ジャンプ！</div>
+
+<div id="result">
+<div id="resultBox">
+<h1>💥 落下！</h1>
+<h2 id="resultHeight"></h2>
+<p id="resultScore"></p>
+<p id="resultRecord"></p>
+<button onclick="restart()">もう一度挑戦！</button>
+</div>
+</div>
+
+<div id="fade"></div><div id="banner"></div><div id="bossbar"><div id="bossname">🐉 マグマドラゴン</div><div id="bossbg"><div id="bossfill"></div></div></div>
+<div id="shop"><div id="shopBox"><div id="shopHead"><h2>🛍️ スキン屋</h2><span id="shopGems">💎 0</span></div><div id="shopFeature"><div id="shopPreview"><canvas id="pv"></canvas><div style="font-size:11px;color:#a9d8ef;margin-top:3px">選択中のスキン</div></div><div><h3 id="shopName"></h3><div id="shopDesc"></div></div></div><input id="shopSearch" type="search" placeholder="🔎 スキン名で検索…" oninput="renderShop()"><div id="shopCount"></div><div id="shopList"></div><div id="shopActions"><button id="shopAct" onclick="shopAct()"></button><button id="shopClose" onclick="closeShop()">閉じる</button></div></div></div>
+<script>
+const $=id=>document.getElementById(id),T=THREE,D=7;
+const scene=new T.Scene();scene.background=new T.Color(0x6cc3ee);scene.fog=new T.Fog(0x8fd3f2,28,75);
+const cam=new T.PerspectiveCamera(62,1,.1,200),ren=new T.WebGLRenderer({canvas:$('game'),antialias:true});
+let gameMode='3d';
+// 自由カメラ：三人称を基本に、画面ボタンで俯瞰視点へ切り替え
+let cameraYaw=Math.PI,cameraPitch=.58,cameraDistance=8.2,cameraOverhead=false,cameraDragging=false,cameraPointerId=null,cameraLastX=0,cameraLastY=0;
+function toggleCameraMode(){cameraOverhead=!cameraOverhead;$('cameraBtn').textContent=cameraOverhead?'📷 三人称カメラ':'📷 俯瞰カメラ';if(cameraOverhead){cameraPitch=1.28;cameraDistance=Math.max(cameraDistance,10)}else{cameraPitch=.58;cameraDistance=Math.min(cameraDistance,9)} }
+function updateFreeCamera(){const target=new T.Vector3(pl.x,camY+1.1,pl.z),d=cameraDistance,cp=Math.cos(cameraPitch);cam.position.set(target.x+Math.cos(cameraYaw)*cp*d,target.y+Math.sin(cameraPitch)*d,target.z+Math.sin(cameraYaw)*cp*d);cam.lookAt(target)}
+$('game').addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0||catTargeting||glitchTargeting||shopOpen||ended)return;cameraDragging=true;cameraPointerId=e.pointerId;cameraLastX=e.clientX;cameraLastY=e.clientY;$('game').setPointerCapture(e.pointerId)});
+$('game').addEventListener('pointermove',e=>{if(!cameraDragging||e.pointerId!==cameraPointerId)return;const dx=e.clientX-cameraLastX,dy=e.clientY-cameraLastY;cameraLastX=e.clientX;cameraLastY=e.clientY;cameraYaw-=dx*.006;cameraPitch=Math.max(.12,Math.min(1.42,cameraPitch+dy*.005));});
+function endCameraDrag(e){if(cameraPointerId===e.pointerId){cameraDragging=false;cameraPointerId=null}}
+$('game').addEventListener('pointerup',endCameraDrag);$('game').addEventListener('pointercancel',endCameraDrag);
+$('game').addEventListener('wheel',e=>{if(shopOpen||ended)return;e.preventDefault();cameraDistance=Math.max(4.5,Math.min(16,cameraDistance+Math.sign(e.deltaY)*.8) )},{passive:false});
+function resize(){ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}resize();addEventListener('resize',resize);
+scene.add(new T.HemisphereLight(0xffffff,0x3b6a8a,.95));const dl=new T.DirectionalLight(0xffffff,.7);dl.position.set(-6,12,5);scene.add(dl);
+const mat={},mm=c=>mat[c]||(mat[c]=new T.MeshLambertMaterial({color:c})),B=new T.BoxGeometry(1,1,1),S=new T.SphereGeometry(.5,14,10),C=new T.ConeGeometry(.5,1,8),O=new T.OctahedronGeometry(.32),TR=new T.TorusGeometry(.45,.04,6,18);
+function mk(g,c,x,y,z,sx,sy,sz){const o=new T.Mesh(g,mm(c));o.position.set(x,y,z);o.scale.set(sx,sy,sz);return o}
+// 背景の山
+const bg=new T.Group();for(let i=0;i<12;i++)bg.add(mk(C,i%2?0x70b8b0:0x4a9b9c,(i-6)*22,-4,(i%2?-1:1)*(42+i%3*10),26,34,26));scene.add(bg);
+// プレイヤー
+const SKINS=[
+{id:'def',name:'冒険者',price:0,desc:'特性・能力なし。基本のスキン。',shirt:0x147fdb,pants:0x193c66,shoe:0xe64c39,skin:0xf3c49c,hair:0x673c27},
+{id:'potsu',name:'白人ぽつぽつニキ',price:20,desc:'特性：茶色いぽつぽつ弾を5発発射して敵を攻撃。1ゲーム5回。',shirt:0xff8fc7,pants:0xf06fae,shoe:0xd0345e,skin:0xfff1e8,hair:0x6b4226,frk:true},
+{id:'sanrio',name:'サンリオおじさん',price:25,desc:'特性：「あなたの家まで送ってあげるよ！」と発狂しながら範囲攻撃。1ゲーム5回。',shirt:0x2f5fc0,pants:0xe8b896,shoe:0x2c5aa8,skin:0xe8b896,hair:0x1b1b1b,mask:0x2c5aa8,dress:true},
+{id:'ninja',name:'忍者',price:30,desc:'特性：3秒間透明になり、シャイゴーストやマグマドラゴンに見つからない。1ゲーム5回。',shirt:0x22262e,pants:0x1b1e25,shoe:0x111111,skin:0xf0c9a0,hair:0x111111,band:0xd62828,scarf:0xd62828},
+{id:'pirate',name:'海賊',price:35,desc:'特性：海賊船で足場へ戻り、上昇ジャンプ。1ゲーム5回。',shirt:0xeeeeee,pants:0x2c3e50,shoe:0x4b2e1a,skin:0xe8b98f,hair:0x3b2a1e,band:0xe03131,patch:true},
+{id:'knight',name:'ナイト',price:40,desc:'特性：剣の範囲斬撃で敵を攻撃。1ゲーム5回。',shirt:0xb7c0d0,pants:0x8793a8,shoe:0x5b667c,skin:0xf0c9a0,hair:0xb7c0d0,plume:0xd33333},
+{id:'frog',name:'カエルくん',price:40,desc:'特性：能力ボタンで追加ジャンプを準備し、空中でもう一度跳べる。1ゲーム5回。',shirt:0x4caf50,pants:0x388e3c,shoe:0x2e7d32,skin:0x81c784,hair:0x66bb6a,froge:true},
+{id:'cat',name:'ねこ',price:45,desc:'特性：赤いレーザーポインターで選んだ足場へ瞬間移動。1ゲーム5回。',shirt:0xffa94d,pants:0xf08c2e,shoe:0xffffff,skin:0xffe0b2,hair:0xf08c2e,ears:0xf08c2e,tail:0xf08c2e},
+{id:'robot',name:'ロボ',price:50,desc:'特性：ロケットパンチを発射して敵を攻撃。1ゲーム5回。',shirt:0x9fb4c0,pants:0x6f8592,shoe:0x394b55,skin:0xcfd8dc,hair:0x6f8592,antenna:0xff5252,eye:0x00e5ff},
+{id:'gold',name:'ゴールド',price:100,desc:'特性：獲得ポイントが常に通常の2倍。パッシブ能力。',shirt:0xffd54a,pants:0xf2b705,shoe:0xffe08a,skin:0xffeaa0,hair:0xe0a800,crown:true},
+{id:'leon',name:'レオン',price:60,desc:'特性：忍者と同じく3秒間透明になり、敵やボスに見つからない。1ゲーム5回。',shirt:0x6fcf3f,pants:0x4a5370,shoe:0xffffff,skin:0xf0c9a0,hair:0x6fcf3f,hood:0x6fcf3f},
+{id:'spike',name:'スパイク',price:60,desc:'特性：トゲを投げて敵を攻撃。1ゲーム5回。',shirt:0x4fae4a,pants:0x3d9140,shoe:0x2e6b30,skin:0x5cc05a,hair:0x3d9140,shades:true,flower:0xff5fa2,spikes:true},
+{id:'poco',name:'ポコ（ブロスタ風）',price:60,desc:'ソンブレロとギターのガイコツ楽団員。',shirt:0x1f8f9a,pants:0x2b2b3a,shoe:0x5b3a1e,skin:0xf3f0e6,hair:0xf3f0e6,eye:0xffffff,skull:true,sombrero:0xd9a441,guitar:true},
+{id:'mortis',name:'モーティス（ブロスタ風）',price:60,desc:'黒いマントのヴァンパイア。',shirt:0x2a2438,pants:0x1c1a26,shoe:0x14121a,skin:0xe8dfe8,hair:0x1a1a22,eye:0xff3b3b,cape:0x5a1f3a},
+{id:'bull',name:'ブル（ブロスタ風）',price:60,desc:'ハゲ頭に鼻リングの力持ち。',shirt:0x333333,pants:0x5b4b3a,shoe:0x222222,skin:0xd9a574,hair:0xd9a574,ring:true},
+{id:'nita',name:'ニタ（ブロスタ風）',price:60,desc:'特性：HP4のクマを召喚！ついてきて敵にジャンプ攻撃。クマが倒れるまで次のクマは召喚できない。HPゲージ表示。ドッスン岩には攻撃しない。',shirt:0xd6783a,pants:0x5a3b22,shoe:0x3b2415,skin:0xd9a574,hair:0x2a1a12,bearEars:0x8d5a2e},
+{id:'penguin',name:'ペンギン',price:40,desc:'白いお腹とオレンジのくちばし。',shirt:0x1f2a3a,pants:0x1f2a3a,shoe:0xff9800,skin:0x1f2a3a,hair:0x1f2a3a,eye:0xffffff,beak:0xff9800,belly:0xffffff},
+{id:'rabbit',name:'うさぎ',price:45,desc:'長い耳とまんまるしっぽ。',shirt:0xffffff,pants:0xf4f4f4,shoe:0xffb6c1,skin:0xfff5f5,hair:0xffffff,longEars:0xffffff,puff:0xffffff},
+{id:'panda',name:'パンダ',price:50,desc:'黒い耳と目のまわりの模様。',shirt:0xffffff,pants:0x222222,shoe:0x222222,skin:0xffffff,hair:0xffffff,bearEars:0x222222,patches:true,eye:0xffffff},
+{id:'astro',name:'うちゅうひこうし',price:55,desc:'ヘルメットと酸素ボンベ付き。',shirt:0xf5f5f5,pants:0xe0e0e0,shoe:0xff7043,skin:0xf0c9a0,hair:0x5b3a1e,helmet:0xffffff},
+{id:'dragon',name:'ドラゴン',price:70,desc:'特性：ジャンプ後にパラシュートのように滑空し、ゆっくり降下。滑空は1ゲーム5回。',shirt:0x43a047,pants:0x2e7d32,shoe:0x8d6e63,skin:0x66bb6a,hair:0x2e7d32,horns:0xffd54a,tail:0x2e7d32,wings:0xe53935},
+{id:'lava',name:'マグマ戦士',price:85,desc:'燃えるような赤とオレンジの鎧。',shirt:0xe53935,pants:0x8e2400,shoe:0xff6d00,skin:0xffb74d,hair:0xff6d00,horns:0xffd54f,tail:0xff6d00},
+{id:'ice',name:'アイスゴーレム',price:85,desc:'氷の体と青白いヘルメット。',shirt:0x80deea,pants:0x26c6da,shoe:0x00838f,skin:0xb2ebf2,hair:0x4dd0e1,helmet:0xe0f7fa,eye:0x006064},
+{id:'angel',name:'てんし',price:90,desc:'白い服に金の輪と大きな羽。',shirt:0xffffff,pants:0xfff3c4,shoe:0xffd54f,skin:0xffdfbd,hair:0xfff3c4,wings:0xffffff,crown:true},
+{id:'demon',name:'あくま',price:90,desc:'紫の服に赤いツノとしっぽ。',shirt:0x673ab7,pants:0x311b92,shoe:0x212121,skin:0xe1bee7,hair:0x4a148c,horns:0xf44336,tail:0x8e24aa,wings:0x4a148c},
+{id:'bee',name:'ハチ',price:75,desc:'黄色と黒のしま模様風ボディに羽。',shirt:0xffd600,pants:0x212121,shoe:0x212121,skin:0xffe082,hair:0x212121,wings:0xffffff,antenna:0xffd600},
+{id:'ghost',name:'ゆうれい',price:80,desc:'夜にぴったりの青白いゴースト。',shirt:0xb3e5fc,pants:0x81d4fa,shoe:0xe1f5fe,skin:0xe1f5fe,hair:0xffffff,eye:0x283593,cape:0x90caf9},
+{id:'royal',name:'ダイヤ王',price:120,desc:'ダイヤ色の鎧と王冠をまとったレアスキン。',shirt:0x00e5ff,pants:0x0097a7,shoe:0xffffff,skin:0xb2ebf2,hair:0x00bcd4,crown:true,plume:0xffffff},
+{id:'shark',name:'サメ',price:80,desc:'海色の体に鋭そうな背びれ風の飾り。',shirt:0x607d8b,pants:0x455a64,shoe:0x263238,skin:0xb0bec5,hair:0x37474f,eye:0xffffff,tail:0x455a64},
+{id:'rainbow',name:'にじいろスター',price:150,desc:'全身が虹色に輝くスター！特性を使うと12種類のランダム能力から1つ発動。',shirt:0xff4fa3,pants:0x7c4dff,shoe:0x00e5ff,skin:0xffe0bd,hair:0xffeb3b,crown:true,wings:0x00e676},
+{id:'samurai',name:'サムライ',price:95,desc:'赤い兜飾りと黒い鎧の戦士。',shirt:0x424242,pants:0x212121,shoe:0x111111,skin:0xf0c9a0,hair:0x111111,helmet:0xb71c1c,plume:0xff1744},
+{id:'alien',name:'エイリアン',price:100,desc:'宇宙から来た緑色のアンテナ生命体。',shirt:0x76ff03,pants:0x33691e,shoe:0x1b5e20,skin:0x9cff57,hair:0x64dd17,antenna:0xffea00,eye:0x7c4dff},
+{id:'golem',name:'ミニゴーレム',price:500,desc:'👑 強化版！岩の鎧でダメージを1回耐える。特性「ゴーレム・ドスン」は超広範囲の衝撃波で敵・シャイゴースト・ボスにダメージ（ボスは2ダメージ）＆1.5秒無敵。1ゲーム8回。',shirt:0x7a6e62,pants:0x5a5249,shoe:0x3f3a35,skin:0x9a8d7c,hair:0x6d6459,eye:0xffa530,golem:true},
+{id:'checkpoint',name:'チェックポイントマン',price:120,desc:'特性：好きな場所にチェックポイントを設置。やられたり落ちたりすると、そこに復活してチェックポイントは消える。1ゲーム最大3回。',shirt:0x20d6c4,pants:0x183e52,shoe:0xffd34e,skin:0xffd7ad,hair:0x163b52,checkpoint:true},
+{id:'glitchlord',name:'バグの支配者',price:1000,desc:'👑 裏ボス級！狙った敵をバグ化して3秒停止。専用ボタンでグリッチ足場を手動設置（1秒で消える）。攻撃・移動・防御すべて最強級。',shirt:0xff00e6,pants:0x00eaff,shoe:0x111122,skin:0x8affff,hair:0x202044,eye:0xff00e6,glitchlord:true,wings:0x8c00ff}];
+function makeAvatar(k){const s=SKINS.find(x=>x.id===k)||SKINS[0],g=new T.Group(),u=g.userData;
+const leg=z=>{const l=new T.Group();l.position.set(0,.45,z);l.add(mk(B,s.pants,0,-.23,0,.22,.45,.22),mk(B,s.shoe,.05,-.4,0,.34,.1,.24));g.add(l);return l};
+const arm=z=>{const a=new T.Group();a.position.set(0,.98,z);a.add(mk(B,s.shirt,0,-.06,0,.18,.16,.15),mk(B,s.skin,0,-.3,0,.11,.34,.11));if(s.golem)a.add(mk(S,0x7a6e62,0,-.5,0,.26,.26,.26),mk(B,0x57504a,.1,-.5,0,.1,.12,.2));g.add(a);return a};
+u.legL=leg(-.12);u.legR=leg(.12);u.armL=arm(-.37);u.armR=arm(.37);
+g.add(mk(B,s.shirt,0,.75,0,.4,.5,.62),mk(B,s.skin,0,1.18,0,.38,.38,.4),mk(B,s.hair,-.03,1.4,0,.42,.1,.44),mk(B,s.hair,-.1,1.2,0,.2,.34,.42),mk(B,s.eye||0x172338,.2,1.2,-.09,.03,.06,.05),mk(B,s.eye||0x172338,.2,1.2,.09,.03,.06,.05));
+if(s.frk)for(let i=0;i<44;i++){const z=-.17+(i*37%100)/100*.34,y=1.02+(i*53%100)/100*.34;if(y>1.15&&y<1.27&&Math.abs(Math.abs(z)-.09)<.045)continue;g.add(mk(B,0x8b5a2b,.195,y,z,.02,.035,.035))}
+if(s.band)g.add(mk(B,s.band,0,1.33,0,.4,.07,.42),mk(B,s.band,-.25,1.3,0,.18,.07,.12));
+if(s.scarf)g.add(mk(B,s.scarf,0,.99,0,.44,.1,.66),mk(B,s.scarf,-.32,.85,-.1,.1,.35,.1));
+if(s.plume)g.add(mk(B,s.plume,-.03,1.58,0,.1,.22,.32));
+if(s.patch)g.add(mk(B,0x111111,.2,1.22,.09,.03,.1,.1));
+if(s.antenna)g.add(mk(B,0x6f8592,0,1.5,0,.03,.14,.03),mk(S,s.antenna,0,1.6,0,.1,.1,.1));
+if(s.froge)for(const z of[-1,1])g.add(mk(S,0xffffff,.05,1.46,z*.12,.17,.17,.17),mk(S,0x111111,.12,1.47,z*.12,.08,.08,.08));
+if(s.ears)for(const z of[-1,1])g.add(mk(C,s.ears,-.03,1.52,z*.14,.15,.22,.15));
+if(s.tail)g.add(mk(B,s.tail,-.45,.6,0,.5,.09,.09));
+if(s.crown)for(const z of[-1,0,1])g.add(mk(C,0xffe066,-.03,1.54,z*.15,.11,.16,.11));
+if(s.id==='rainbow'){const rc=[0xff3030,0xff8c24,0xffe52b,0x35e85a,0x24c8ff,0x594dff,0xd94dff];for(let i=0;i<7;i++){const z=-.255+i*.085;g.add(mk(B,rc[i],.211,.75,z,.025,.46,.084));g.add(mk(B,rc[(i+3)%7],.116,.34,z*.72,.025,.31,.065));g.add(mk(C,rc[i],-.035,1.56,(-1+i/3)*.12,.105,.18,.105));g.add(mk(B,rc[i],-.29,.95,(-1+i/3)*.42,.055,.48,.12))}g.add(mk(S,0xffffff,.235,1.34,-.19,.055,.055,.055),mk(S,0xffffff,.235,1.34,.19,.055,.055,.055),mk(S,0xfff176,.235,.98,-.25,.045,.045,.045),mk(S,0xfff176,.235,.98,.25,.045,.045,.045));}
+if(s.glitchlord){
+// バグの支配者：暗い装甲＋ネオンの走査線＋欠けたデジタル断片
+const gc=[0xff00e6,0x00ffff,0x7d2cff,0xffffff,0x182037,0x080d18];
+const neon=(geo,col,x,y,z,sx,sy,sz)=>{const o=new T.Mesh(geo,new T.MeshBasicMaterial({color:col}));o.position.set(x,y,z);o.scale.set(sx,sy,sz);g.add(o);return o};
+// 黒い装甲プレートと胸部コア
+ g.add(mk(B,0x101426,.015,.76,0,.46,.53,.66),mk(B,0x252b43,.245,.79,0,.045,.42,.5),mk(B,0x070b16,-.245,.79,0,.045,.42,.5));
+ neon(O,0xff00e6,.29,.82,0,.32,.38,.32);neon(O,0x00ffff,.325,.82,0,.16,.2,.16);
+ // 顔面を覆う割れたバイザー、左右非対称の発光眼
+ g.add(mk(B,0x090d19,.225,1.2,0,.055,.22,.38),mk(B,0x3d174e,.26,1.2,-.01,.035,.12,.33));
+ neon(B,0xff174f,.292,1.225,-.105,.035,.035,.095);neon(B,0x00ffff,.292,1.19,.105,.035,.025,.11);
+ // 頭上の折れたデジタル角と浮遊クラウン片
+ for(let i=0;i<4;i++){const h=mk(C,gc[i%4],-.08+i*.1,1.57,(i-1.5)*.105,.09,.28+(i%2)*.14,.09);h.rotation.z=(i-1.5)*-.32;h.rotation.x=(i%2)*.25;g.add(h)}
+ // 腕・脚の装甲、発光した関節と爪
+ for(const side of [-1,1]){g.add(mk(B,side<0?0x191d30:0x26203b,side*.25,.76,0,.15,.35,.2),mk(B,0x090d18,side*.31,.42,0,.18,.16,.22));neon(O,side<0?0x00ffff:0xff00e6,side*.34,.55,.04,.12,.14,.12);for(let j=0;j<3;j++)neon(B,j%2?0xff00e6:0x00ffff,side*.42,.28,-.08+j*.08,.045,.13,.035)}
+ // 背中から欠けたグリッチ翼。左右で形をずらし、ピクセルが崩れた印象に
+ const bits=[];for(let i=0;i<18;i++){const side=i%2?1:-1,col=gc[i%4],x=-.34-(i%3)*.11,y=.55+(i%6)*.17,z=side*(.22+(i%4)*.075),size=.045+(i%3)*.025;const q=neon(i%4===0?O:B,col,x,y,z,size*1.5,size,size);q.userData.glitchBit={x,y,z,phase:i*1.73,amp:.025+(i%4)*.018};bits.push(q)}
+ // 2本のホログラム輪と横切る走査線
+ const ring=neon(TR,0xff00e6,-.18,1.0,0,.83,.83,.83);ring.rotation.x=Math.PI/2;ring.rotation.y=.15;
+ const ring2=neon(TR,0x00ffff,-.18,.98,0,.7,.7,.7);ring2.rotation.x=Math.PI/2;ring2.rotation.y=-.22;
+ for(let i=0;i<5;i++){const stripe=neon(B,i%2?0x00ffff:0xff00e6,.31,.62+i*.075,-.12+(i%3)*.12,.025,.018,.28);stripe.userData.flicker=i}
+ // 浮遊する壊れたピクセル
+ for(let i=0;i<10;i++){const q=neon(i%3===0?O:B,gc[i%4],-.25+(i%4)*.14,1.0+(i%5)*.16,-.42+(i%3)*.1,.035+(i%2)*.025,.035+(i%3)*.02,.035);q.userData.glitchBit={x:q.position.x,y:q.position.y,z:q.position.z,phase:i*2.31,amp:.07};bits.push(q)}
+ u.glitchBits=bits;u.glitchRings=[ring,ring2];u.glitchStripes=g.children.filter(o=>o.userData&&o.userData.flicker!==undefined);
+}
+if(s.cape)g.add(mk(B,s.cape,-.27,.8,0,.06,.85,.64),mk(B,s.cape,-.02,1.0,0,.46,.1,.7));
+if(s.ring)g.add(mk(B,0xffd54a,.21,1.08,0,.03,.08,.08));
+if(s.bearEars)for(const z of[-1,1])g.add(mk(S,s.bearEars,-.03,1.5,z*.17,.18,.18,.18));
+if(s.beak)g.add(mk(B,s.beak,.23,1.12,0,.1,.07,.12));
+if(s.belly)g.add(mk(B,s.belly,.21,.72,0,.03,.4,.42),mk(B,s.belly,.2,1.15,0,.02,.2,.3));
+if(s.longEars)for(const z of[-1,1])g.add(mk(B,s.longEars,-.03,1.72,z*.1,.1,.55,.1),mk(B,0xffb6c1,.01,1.72,z*.1,.03,.4,.06));
+if(s.puff)g.add(mk(S,s.puff,-.33,.55,0,.25,.25,.25));
+if(s.helmet)g.add(mk(B,s.helmet,0,1.46,0,.5,.1,.52),mk(B,s.helmet,-.22,1.2,0,.08,.5,.52),mk(B,s.helmet,0,1.2,-.26,.5,.5,.06),mk(B,s.helmet,0,1.2,.26,.5,.5,.06),mk(B,s.helmet,0,.96,0,.5,.07,.54),mk(B,0xcfd8dc,-.3,.8,0,.2,.45,.4));
+if(s.horns)for(const z of[-1,1])g.add(mk(C,s.horns,-.03,1.55,z*.13,.1,.22,.1));
+if(s.wings)for(const z of[-1,1])g.add(mk(B,s.wings,-.27,.95,z*.42,.04,.55,.38));
+if(s.patches)g.add(mk(B,0x111111,.2,1.2,-.09,.02,.12,.1),mk(B,0x111111,.2,1.2,.09,.02,.12,.1));
+if(s.hood)g.add(mk(B,s.hood,0,1.43,0,.44,.12,.48),mk(B,s.hood,-.12,1.2,0,.2,.42,.48),mk(B,s.hood,0,1.2,-.22,.34,.4,.06),mk(B,s.hood,0,1.2,.22,.34,.4,.06),mk(S,0xffeb3b,0,1.55,-.14,.14,.14,.14),mk(S,0xffeb3b,0,1.55,.14,.14,.14,.14),mk(S,0x111111,.04,1.56,-.14,.07,.07,.07),mk(S,0x111111,.04,1.56,.14,.07,.07,.07));
+if(s.shades)g.add(mk(B,0x111111,.21,1.21,0,.03,.1,.38));
+if(s.flower)g.add(mk(S,s.flower,0,1.52,0,.2,.14,.2),mk(S,0xffeb3b,0,1.56,0,.08,.08,.08));
+if(s.spikes)for(let i=0;i<9;i++){const y=.55+(i%3)*.17,z=-.2+(i*7%5)*.1;g.add(mk(C,0xffffff,.22,y,z,.07,.2,.07),mk(C,0xffffff,-.22,y+.05,-z,.07,.2,.07))}
+if(s.skull)g.add(mk(B,0x111111,.2,1.22,-.09,.02,.11,.11),mk(B,0x111111,.2,1.22,.09,.02,.11,.11),mk(B,0x111111,.2,1.13,0,.02,.05,.05),mk(B,0x111111,.2,1.05,0,.02,.025,.22));
+if(s.sombrero)g.add(mk(B,s.sombrero,-.02,1.43,0,.95,.04,.95),mk(B,s.sombrero,-.02,1.54,0,.36,.2,.36),mk(B,0xe0463a,-.02,1.48,0,.38,.05,.38));
+if(s.guitar)g.add(mk(B,0xc77d2e,-.3,.7,0,.1,.5,.38),mk(B,0x6b3d12,-.3,1.15,0,.06,.45,.07));
+if(s.checkpoint){g.add(mk(B,0xffffff,.205,.78,-.12,.025,.13,.13),mk(B,0x111111,.205,.78,.02,.025,.13,.13),mk(B,0x111111,.205,.91,-.12,.025,.13,.13),mk(B,0xffffff,.205,.91,.02,.025,.13,.13),mk(B,0xffd34e,-.08,1.57,0,.06,.2,.06));}
+if(s.dress){g.add(mk(B,s.shirt,0,.5,0,.5,.3,.74));for(const z of[-1,1])g.add(mk(B,s.hair,-.02,1.26,z*.27,.14,.32,.12),mk(B,s.mask,-.02,1.43,z*.27,.16,.06,.14));g.add(mk(B,s.mask,.2,1.08,0,.03,.17,.3),mk(B,s.hair,.2,1.33,0,.03,.07,.4))}
+if(s.golem){
+const gl=(x,y,z,sx,sy,sz)=>{const o=new T.Mesh(B,new T.MeshBasicMaterial({color:0xffa530}));o.position.set(x,y,z);o.scale.set(sx,sy,sz);g.add(o);return o};
+for(const z of[-1,1])g.add(mk(S,0x7a6e62,0,1.03,z*.37,.3,.26,.3),mk(C,0x3f3a35,0,1.2,z*.37,.09,.16,.09));
+g.add(mk(B,0x6d6459,.22,.92,.14,.08,.2,.2),mk(B,0x80766a,.22,.6,-.14,.08,.24,.2),mk(B,0x57504a,.22,.78,0,.06,.1,.5));
+gl(.235,.8,0,.025,.34,.05);gl(.235,.72,.1,.025,.16,.04);gl(.235,.9,-.1,.025,.14,.04);
+gl(.215,1.2,-.09,.02,.07,.07);gl(.215,1.2,.09,.02,.07,.07);
+g.add(mk(B,0x3f3a35,.2,1.29,0,.06,.07,.4));
+for(const z of[-.13,0,.13])g.add(mk(C,0x57504a,-.03,1.56,z,.1,.22+(z===0?.1:0),.1));
+g.add(mk(S,0x6d6459,-.3,.85,0,.3,.42,.52));
+for(const z of[-.15,.15]){const c=mk(C,0xffc247,-.42,1.12,z,.09,.3,.09);c.rotation.z=.5;g.add(c)}
+}
+return g}
+// モーション：歩き・ジャンプ（上昇）・落下
+function pose(av,k,ll,lr,al,ar){const u=av.userData;u.legL.rotation.z+=(ll-u.legL.rotation.z)*k;u.legR.rotation.z+=(lr-u.legR.rotation.z)*k;u.armL.rotation.z+=(al-u.armL.rotation.z)*k;u.armR.rotation.z+=(ar-u.armR.rotation.z)*k}
+function animPlayer(dt){const k=Math.min(1,dt*16),spd=pl.spd||0;let ll=0,lr=0,al=0,ar=0,bob=0;
+if(!pl.ground){if(pl.vy>0){ll=.7;lr=-.4;al=ar=2.6}else{ll=.35;lr=-.35;al=ar=2}}
+else if(spd>.5){const ph=clock*(spd>7?15:12),a=.8*Math.min(1,spd/6);ll=Math.sin(ph)*a;lr=-ll;al=-ll*.8;ar=ll*.8;bob=Math.abs(Math.sin(ph))*.06}
+else{al=Math.sin(clock*2)*.06;ar=-al}
+pose(pm,k,ll,lr,al,ar);if(pm.userData.glitchBits){for(const q of pm.userData.glitchBits){const d=q.userData.glitchBit;q.position.x=d.x+Math.sin(clock*13+d.phase)*d.amp;q.position.y=d.y+Math.sin(clock*17+d.phase)*d.amp*1.8;q.position.z=d.z+Math.cos(clock*11+d.phase)*d.amp;q.rotation.x=clock*1.4+d.phase;q.rotation.y=clock*2.1+d.phase}for(const [i,r] of (pm.userData.glitchRings||[]).entries()){r.rotation.z=clock*(i?-.8:1.1);r.material.opacity=.62+.32*Math.sin(clock*10+i);r.material.transparent=true}for(const q of pm.userData.glitchStripes||[]){q.visible=Math.sin(clock*24+q.userData.flicker*2)>-.55}}const sc=pl.giantTimer>0?2.15:pl.big?1.3:1;pm.scale.setScalar(pm.scale.x+(sc-pm.scale.x)*Math.min(1,dt*5));pm.visible=pl.stealth<=0&&!(pl.inv>0&&Math.floor(clock*20)%2);pm.position.set(pl.x,pl.y+bob,pl.z);pm.rotation.y=pl.yaw}
+let pm=makeAvatar('def');scene.add(pm);
+let keys={},platforms=[],walls=[],enemies=[],crystals=[],lvl=null;
+let abilityUses=5,glitchPlatformUses=10,abilityShots=[],catTargeting=false,glitchTargeting=false,autoPlatforms=[],autoPlatformCooldown=0,abilityVisuals=[],lastSafe={x:0,y:0,z:0,pi:0};
+let checkpointUses=0,activeCheckpoint=null;
+let nitaBear=null;
+let pl={x:0,y:0,z:0,vy:0,ground:true,yaw:0},wallTimer=0,wallDir=0,kickT=0,kickDir=0,camY=3,clock=0,last=performance.now();
+let elapsed=0,falls=0,attempts=1,gems=0,kills=0,bonus=0,maxHeight=0,score=0,highScore=0,bestTime=null,dist=0,ended=false,nextX=0;
+try{highScore=Number(localStorage.getItem('fallHighScore'))||0;maxHeight=Number(localStorage.getItem('fallMaxHeight'))||0;bestTime=Number(localStorage.getItem('fallBestTime'));if(!Number.isFinite(bestTime)||bestTime<=0)bestTime=null}catch(e){}
+let owned=['def'],curSkin='def',shopOpen=false,selSkin='def',pvAv=null;
+try{gems=Number(localStorage.getItem('fallGems'))||0;owned=JSON.parse(localStorage.getItem('fallOwned'))||['def'];curSkin=localStorage.getItem('fallSkin')||'def';if(!owned.includes(curSkin))curSkin='def'}catch(e){}
+function saveAll(){try{localStorage.setItem('fallGems',gems);localStorage.setItem('fallOwned',JSON.stringify(owned));localStorage.setItem('fallSkin',curSkin)}catch(e){}}
+function equip(){scene.remove(pm);pm=makeAvatar(curSkin);scene.add(pm);updateAbilityButton()}equip();
+const meters=()=>Math.floor(dist*2),kill=n=>{bonus+=n;kills++};
+function pushPlat(x0,x1,top,z0=-D/2,z1=D/2,c1=0x63d7ef,c2=0x1876a8){const w=x1-x0,zd=z1-z0,cx=(x0+x1)/2,cz=(z0+z1)/2,g=new T.Group();g.add(mk(B,c1,cx,top-.2,cz,w,.4,zd),mk(B,c2,cx,top-4.4,cz,w-.02,8,zd-.02));lvl.add(g);const p={x0,x1,top,g,z0,z1,i:pid++};platforms.push(p);return p}
+function mkEnemy(type,p,x,z){const e={type,p,x,z,y:p.top,dir:-1,st:type==='spike'?'':type==='bird'?'fly':'walk',t:0,kick:0,life:0,ph:Math.random()*6,bx:x},g=new T.Group();e.g=g;
+if(type==='spike'){// 針の罠：黄色いふち取りの鉄板＋赤い先端のトゲ
+g.add(mk(B,0x2d3340,0,.06,0,1.6,.12,2.7),mk(B,0xffc400,0,.13,-1.32,1.5,.04,.12),mk(B,0xffc400,0,.13,1.32,1.5,.04,.12));
+for(let i=0;i<3;i++)for(let j=0;j<4;j++){const x=(i-1)*.4,z=(j-1.5)*.6;g.add(mk(C,0xcfd8dc,x,.3,z,.34,.56,.34),mk(C,0xff3b3b,x,.52,z,.14,.18,.14))}}
+else if(type==='goomba'){// プルン：つやつやのぷるぷるスライム
+const sm=new T.MeshLambertMaterial({color:0x4fe3a1,transparent:true,opacity:.9}),bd=new T.Mesh(S,sm);bd.scale.set(1.15,.9,1.15);bd.position.set(0,.42,0);g.add(bd);
+g.add(mk(S,0x4fe3a1,0,.95,0,.3,.38,.3),mk(S,0x37c889,.2,.08,-.55,.4,.2,.4),mk(S,0x37c889,.2,.08,.55,.4,.2,.4),mk(S,0xeafff5,-.2,.8,-.35,.2,.14,.12));
+for(const z of[-.22,.22])g.add(mk(S,0xffffff,.42,.55,z,.34,.38,.3),mk(S,0x112233,.56,.55,z,.17,.22,.17),mk(S,0xffffff,.64,.62,z-.02,.06,.06,.06));
+for(const z of[-.42,.42])g.add(mk(S,0xff9db8,.5,.3,z,.14,.08,.08));
+g.add(mk(B,0x1a2b3a,.58,.32,0,.04,.07,.16))}
+else if(type==='koopa'){// ローラン：トゲ付きの鎧をまとったアルマジロ
+const w=new T.Group(),b=new T.Group(),sh=0x6c7a9c,dk=0x4a5578,sk=0xf2c9a0;
+w.add(mk(S,sh,0,.55,0,1.25,.8,.95),mk(S,dk,-.4,.55,0,.16,.7,.8),mk(S,dk,0,.55,0,.16,.86,.96),mk(S,dk,.4,.55,0,.16,.7,.8));
+for(const x of[-.35,.05])w.add(mk(C,0xffd54a,x,.98,0,.16,.28,.16));
+w.add(mk(S,sk,.64,.42,0,.5,.45,.45),mk(S,sk,.88,.36,0,.22,.2,.22),mk(S,0x2a1a12,.99,.38,0,.08,.08,.08));
+for(const z of[-.13,.13])w.add(mk(S,0xffffff,.8,.5,z,.14,.15,.12),mk(S,0x111111,.86,.5,z,.08,.09,.08),mk(C,sk,.58,.68,z,.14,.25,.14));
+for(const x of[-.35,.35])for(const z of[-.3,.3])w.add(mk(B,0xd9a679,x,.1,z,.22,.2,.2));
+const tl=mk(C,0x4a5578,-.75,.4,0,.22,.6,.22);tl.rotation.z=Math.PI/2;w.add(tl);
+b.add(mk(S,sh,0,.45,0,.9,.9,.9));const r1=new T.Mesh(TR,mm(0x3a4260)),r2=new T.Mesh(TR,mm(0x3a4260));r1.position.y=r2.position.y=.45;r1.rotation.x=Math.PI/2;r2.rotation.y=Math.PI/2;b.add(r1,r2);
+b.add(mk(C,0xffd54a,0,.98,0,.16,.24,.16));for(const s of[-1,1]){const c=mk(C,0xffd54a,0,.45,s*.5,.16,.24,.16);c.rotation.x=s*Math.PI/2;b.add(c)}
+b.visible=false;g.add(w,b);e.w=w;e.b=b}
+else if(type==='bar'){// 回転バー：警告ストライプ＋トゲ鉄球
+g.add(mk(B,0x2a2d36,0,.55,0,3.2,.2,.28));
+for(let i=0;i<8;i++)g.add(mk(B,i%2?0x1a1a1a:0xffc400,-1.4+i*.4,.55,0,.4,.25,.32));
+g.add(mk(B,0x555555,0,.25,0,.2,.5,.2),mk(S,0x333333,0,.55,0,.5,.5,.5));
+for(const sx of[-1,1]){g.add(mk(S,0x6b7280,sx*1.75,.55,0,.55,.55,.55));for(const [dy,dz] of[[.38,0],[-.38,0],[0,.38],[0,-.38]]){const c=mk(C,0xe0e4ea,sx*1.75,.55+dy,dz,.14,.28,.14);if(dy<0)c.rotation.x=Math.PI;else if(dz>0)c.rotation.x=Math.PI/2;else if(dz<0)c.rotation.x=-Math.PI/2;g.add(c)}}}
+else if(type==='rock'){// ドスン岩：怒った石の顔
+g.add(mk(B,0x6f6a78,0,0,0,1.4,1.4,1.4));
+for(const y of[-.7,.7])g.add(mk(B,0x8d8799,0,y,0,1.5,.14,1.5));
+for(const y of[-.52,.52])for(const z of[-.52,.52])g.add(mk(S,0x9a94a8,-.74,y,z,.16,.16,.16));
+for(const z of[-.3,.3]){g.add(mk(B,0xffffff,-.72,.2,z,.04,.24,.3),mk(B,0x111111,-.74,.18,z*.8,.04,.2,.14));const br=mk(B,0x241f2a,-.74,.42,z,.05,.1,.4);br.rotation.x=z>0?-.45:.45;g.add(br)}
+g.add(mk(B,0x1a1520,-.72,-.25,0,.04,.25,.8));for(let i=0;i<4;i++)g.add(mk(B,0xf5f5f5,-.74,-.2,(i-1.5)*.2,.04,.14,.1));
+g.add(mk(B,0x4a4552,-.72,.62,.45,.03,.3,.04),mk(B,0x4a4552,-.72,-.55,-.5,.03,.28,.04));
+for(const x of[-.4,.4])for(const z of[-.4,.4]){const c=mk(C,0xdddddd,x,-.85,z,.3,.4,.3);c.rotation.x=Math.PI;g.add(c)}}
+else if(type==='mush'){// ジャンプキノコ：バネ足の赤いキノコ
+for(let i=0;i<3;i++){const r=new T.Mesh(TR,mm(i%2?0x9aa3ad:0xffc400));r.position.y=.1+i*.14;r.rotation.x=Math.PI/2;r.scale.setScalar(.55);g.add(r)}
+g.add(mk(S,0xf6e7c8,0,.55,0,.75,.8,.75),mk(S,0xe8433a,0,1.0,0,1.5,.95,1.5),mk(S,0xc92f28,0,.78,0,1.55,.2,1.55));
+for(const [x,y,z,s] of[[0,1.45,0,.42],[-.35,1.3,.45,.3],[-.4,1.28,-.4,.32],[.15,1.3,-.6,.26],[-.7,1.1,0,.28]])g.add(mk(S,0xffffff,x,y,z,s,.14,s));
+for(const z of[-.28,.28]){g.add(mk(S,0xffffff,.66,.98,z,.26,.3,.24),mk(S,0x111111,.78,.98,z,.12,.16,.12));const br=mk(B,0x3a1a14,.68,1.2,z,.05,.08,.3);br.rotation.x=z>0?-.45:.45;g.add(br)}
+g.add(mk(B,0x3a1a14,.38,.42,0,.04,.07,.22))}
+else if(type==='octo'){// タコ：3つ目のモンスターダコ
+const bd=0x5b2a86,dk=0x3a1860,lt=0x7a3fb0,em=new T.MeshBasicMaterial({color:0xd8ff3a});e.eyeM=em;
+g.add(mk(S,bd,0,1.1,0,1.55,1.25,1.5),mk(S,lt,-.35,1.55,0,1.15,1.1,1.05));
+for(const [x,y,z,s] of[[-.45,2.0,.2,.26],[-.2,1.92,-.3,.22],[-.7,1.85,.15,.2],[0,1.5,.62,.2],[-.3,1.4,-.62,.24]])g.add(mk(S,dk,x,y,z,s,s*.5,s));
+for(const z of[-.3,0,.3]){const h=mk(C,0xe8dcc0,-.1,2.2,z,.16,.42,.16);h.rotation.z=.4;h.rotation.x=z*1.2;g.add(h)}
+for(const z of[-.4,.4]){const eye=new T.Mesh(S,em);eye.scale.set(.46,.52,.46);eye.position.set(.62,1.3,z);g.add(eye);g.add(mk(B,0x000000,.85,1.3,z,.03,.38,.1));const br=mk(B,dk,.66,1.58,z,.06,.12,.5);br.rotation.x=z>0?-.5:.5;g.add(br)}
+const third=new T.Mesh(S,new T.MeshBasicMaterial({color:0xff2a2a}));third.scale.setScalar(.3);third.position.set(.42,1.62,0);g.add(third);
+g.add(mk(B,0x2a0a1a,.74,.78,0,.08,.28,.75));
+for(let i=0;i<5;i++){const z=(i-2)*.15,up=mk(C,0xffffff,.78,.9,z,.08,.18,.08);up.rotation.x=Math.PI;g.add(up,mk(C,0xffffff,.78,.66,z,.08,.16,.08))}
+for(const z of[-.3,.3]){const f=mk(C,0xfff2c0,.8,.88,z,.1,.28,.1);f.rotation.x=Math.PI;g.add(f)}
+e.tent=[];
+for(let i=0;i<8;i++){const a=i/8*Math.PI*2,t=new T.Group();t.position.set(Math.cos(a)*.45,.45,Math.sin(a)*.45);t.rotation.y=-a;
+ const sz=[.52,.42,.32,.22],xs=[.35,.8,1.2,1.5],ys=[-.05,-.12,-.05,.12];
+ for(let k=0;k<4;k++){t.add(mk(S,(i+k)%2?bd:dk,xs[k],ys[k],0,sz[k],sz[k],sz[k]));if(k<3)t.add(mk(S,0xff7aa8,xs[k],ys[k]+sz[k]*.42,0,.12,.07,.12))}
+ g.add(t);e.tent.push(t)}}
+else{// バット：赤い目とキバのコウモリ
+g.add(mk(S,0x3b2466,0,0,0,.72,.82,.62),mk(S,0x8a63d2,.18,-.12,0,.36,.5,.4),mk(C,0x3b2466,0,.47,-.2,.2,.45,.2),mk(C,0x3b2466,0,.47,.2,.2,.45,.2),mk(C,0xff9db8,.05,.45,-.2,.1,.3,.1),mk(C,0xff9db8,.05,.45,.2,.1,.3,.1));
+const em=new T.MeshBasicMaterial({color:0xff4040});for(const z of[-.12,.12]){const o=new T.Mesh(S,em);o.scale.setScalar(.17);o.position.set(.3,.1,z);g.add(o);const f=mk(C,0xffffff,.33,-.2,z*.7,.06,.14,.06);f.rotation.x=Math.PI;g.add(f)}
+const wl=new T.Group(),wr=new T.Group();wl.position.z=-.25;wr.position.z=.25;
+wl.add(mk(B,0xc2358a,0,0,-.5,.7,.05,1),mk(B,0xa02a72,-.2,0,-1.15,.5,.05,.55),mk(B,0x2a1850,.15,.03,-.55,.08,.08,1.2),mk(B,0x2a1850,-.2,.03,-.75,.08,.08,.8));
+wr.add(mk(B,0xc2358a,0,0,.5,.7,.05,1),mk(B,0xa02a72,-.2,0,1.15,.5,.05,.55),mk(B,0x2a1850,.15,.03,.55,.08,.08,1.2),mk(B,0x2a1850,-.2,.03,.75,.08,.08,.8));
+g.add(wl,wr);e.wl=wl;e.wr=wr}
+if(type==='rock'){e.st='idle';e.y=p.top+4.2}else if(type==='bar'){e.st='spin';e.dir=Math.random()<.5?1:-1;e.ph=Math.random()*6}else if(type==='mush'){e.t=.6+Math.random()*1.2}else if(type==='octo'){e.t=1+Math.random()}
+g.position.set(x,e.y,z);lvl.add(g);enemies.push(e)}
+function addStageHazard(p){
+  if(Math.random()>.30||p.x1-p.x0<4)return;
+  const roll=Math.random();
+  const type=roll<.22?'bridge':roll<.48?'pendulum':roll<.66?'spikes':roll<.83?'bar':'lava';
+  const x=p.x0+1.4+Math.random()*Math.max(.2,p.x1-p.x0-2.8),z=gameMode==='2d'?0:(type==='pendulum'?0:p.z0+1+Math.random()*Math.max(.2,p.z1-p.z0-2)),g=new T.Group();g.position.set(x,p.top,z);
+  if(type==='bridge'){
+    // 崩れる橋：板を並べ、踏むと警告後に足場が崩れる
+    g.position.set(p.x0,p.top,0);g.add(mk(B,0x4b3024,(p.x1-p.x0)/2,.05,0,p.x1-p.x0,.12,D*.88));
+    const boards=[];const count=7;for(let i=0;i<count;i++){const bx=.35+i*((p.x1-p.x0-.7)/(count-1));const b=mk(B,i%2?0x9b6339:0xb77a45,bx,.16,0,Math.min(.62,(p.x1-p.x0)/count*.8),.18,D*.82);g.add(b);boards.push(b)}
+    lvl.add(g);stageHazards.push({type,g,x:p.x0,x2:p.x1,z:0,top:p.top,t:0,phase:'idle',p,boards});return;
+  }
+  if(type==='pendulum'){
+    // 巨大振り子：鎖と鉄球が左右（ステージ幅方向）に振れる
+    const pivot=new T.Group();pivot.position.set(0,4.4,0);g.add(mk(B,0x8d9baa,0,4.48,0,.8,.22,.8));
+    const swing=new T.Group();swing.position.set(0,4.35,0);swing.add(mk(B,0xadb8c4,0,-1.65,0,.13,3.3,.13));const pendulumBall=mk(S,0x343d4c,0,-3.35,0,1.0,1.0,1.0);swing.add(pendulumBall,mk(S,0xffa22e,0,-3.35,-.43,.22,.22,.08));g.add(swing);g.userData.swing=swing;g.userData.ball=pendulumBall;
+  } else if(type==='spikes'){for(let i=0;i<3;i++){const m=mk(C,0xff554d,(i-1)*.48,.48,0,.4,.95,.4);g.add(m)}g.add(mk(B,0x53243a,0,.12,0,1.8,.22,1.05))}
+  else if(type==='bar'){g.add(mk(B,0x343044,0,.55,0,2.7,.2,.25));for(let i=-2;i<=2;i++){const m=mk(C,0xffb347,i*.52,.72,0,.25,.58,.25);m.rotation.z=-.35;g.add(m)}}
+  else{g.add(mk(B,0x4a2030,0,.04,0,2.5,.12,1.9));g.add(mk(B,0xff4a18,0,.12,0,2.15,.1,1.55));g.add(mk(B,0xffc247,.1,.18,0,1.1,.06,.8))}
+  lvl.add(g);stageHazards.push({type,g,x,z,top:p.top,t:Math.random()*4,phase:'idle',p});
+}
+function addPlatform(safe){nextX+=1.3+Math.random()*1.3;const pv=platforms[platforms.length-1];const top=Math.max(-3,Math.min(4,pv.top+(Math.random()-.48)*2.4));
+const r=safe?1:Math.random();let kind=r<.12?'spike':r<.24?'goomba':r<.34?'koopa':r<.44?'bird':r<.54?'wall':r<.64?'bar':r<.72?'rock':r<.8?'ghost':r<.85?'mush':r<.9?'octo':'';if(gameMode==='2d'&&kind==='wall')kind='';
+const w=kind==='wall'||kind==='bar'||kind==='rock'?5.5+Math.random()*1.5:kind?4.5+Math.random()*2:3+Math.random()*2;const p=pushPlat(nextX,nextX+w,top),cx=nextX+w/2,ez=gameMode==='2d'?0:(Math.random()-.5)*3;if(!safe)addStageHazard(p);
+if(kind==='spike')mkEnemy('spike',p,cx,ez);else if(kind==='goomba')mkEnemy('goomba',p,cx,ez);else if(kind==='koopa')mkEnemy('koopa',p,cx,ez);else if(kind==='bird')mkEnemy('bird',p,cx,ez);else if(kind==='bar')mkEnemy('bar',p,cx,0);else if(kind==='rock')mkEnemy('rock',p,cx,ez);else if(kind==='mush')mkEnemy('mush',p,cx,ez);else if(kind==='octo')mkEnemy('octo',p,cx,ez);else if(kind==='ghost')spawnGhost(cx,top+1.8,0);
+else if(kind==='wall'){
+// 壁渡りチャレンジ：低めの壁を左右交互に配置し、壁の上から次の壁へジャンプ！
+const parkour=(gameMode!=='2d'&&Math.random()<.72);
+const count=parkour?3:1;
+for(let wi=0;wi<count;wi++){
+  const wx=parkour?cx+(wi-1)*1.85:cx;
+  const wh=parkour?2.05+Math.random()*.38:3.2+Math.random()*2.6;
+  const wd=parkour?D*.30:D*(.52+Math.random()*.12);
+  const wz=parkour?(wi%2===0?-D*.25:D*.25):(Math.random()-.5)*(D-wd)*.72;
+  const wl={x0:wx-.3,x1:wx+.3,top:top+wh,bottom:top,z0:wz-wd/2,z1:wz+wd/2,p,parkour};
+  const g=new T.Group();
+  g.add(mk(B,parkour?0x258eaa:0x5a6b86,wx,top+wh/2,wz,.6,wh,wd),mk(B,parkour?0x74f0ff:0x8fa4c4,wx,top+wh-.05,wz,.7,.14,wd+.1));
+  if(parkour)g.add(mk(B,0xffc857,wx,top+wh+.10,wz,.82,.08,wd+.16));
+  lvl.add(g);wl.g=g;walls.push(wl);addCrystal(wx,top+wh+.8,wz,p);
+}
+if(parkour)banner('🧱 壁渡りエリア！壁から壁へジャンプ！',1500);
+}
+if(!safe&&Math.random()<.14)addMushroom(nextX+w*.75,top+.9,gameMode==='2d'?0:(Math.random()-.5)*4,Math.random()<.035);
+if(Math.random()<.75)addCrystal(nextX+w*.25,top+.9,gameMode==='2d'?0:(Math.random()-.5)*4,p);nextX+=w}
+function addCrystal(x,y,z,p){const m=mk(O,0x73fff0,x,y,z,1,1.4,1);m.material=new T.MeshBasicMaterial({color:0x73fff0});lvl.add(m);crystals.push({m,x,y,z,got:false})}
+function build(){if(nitaBear&&nitaBear.g&&nitaBear.g.parent)nitaBear.g.parent.remove(nitaBear.g);nitaBear=null;abilityUses=curSkin==='golem'?8:5;glitchPlatformUses=10;checkpointUses=0;activeCheckpoint=null;abilityShots.forEach(q=>lvl&&lvl.remove(q.m));abilityShots=[];abilityVisuals.forEach(q=>lvl&&lvl.remove(q));abilityVisuals=[];catTargeting=false;glitchTargeting=false;autoPlatforms=[];autoPlatformCooldown=0;lastSafe={x:0,y:0,z:0,pi:0};if(saved)scene.remove(saved.lvl);boss=null;saved=null;busy=false;bossRocks=[];fxP=[];shake=0;inkReset();shots=[];rings=[];sky(false);nextBoss=300;$('bossbar').style.display='none';$('fade').style.opacity=0;if(lvl)scene.remove(lvl);lvl=new T.Group();scene.add(lvl);platforms=[];walls=[];enemies=[];crystals=[];ghosts=[];mushrooms=[];stageHazards=[];ghostT=14;pid=0;bonus=0;kills=0;pushPlat(-4,6,0);nextX=6;for(let i=0;i<14;i++)addPlatform(i<2);
+pl={x:0,y:0,z:0,vy:0,ground:true,yaw:0,inv:0,stealth:0,gliding:0,frogReady:false,giantTimer:0,hp:curSkin==='glitchlord'?3:0,maxHp:3};if(curSkin==='golem')pl.big=true;wallTimer=kickT=0;camY=3;elapsed=0;score=0;dist=0;ended=false;$('result').style.display='none';updateHUD();updateAbilityButton()}
+const ABILITY_TEXT={checkpoint:'特性：好きな場所にチェックポイントを置く。落下・被弾時にそこへ復活し、使ったチェックポイントは消える（1ゲーム3回まで）。',potsu:'特性：茶色いぽつぽつ弾を5発発射。',sanrio:'特性：叫びながら広範囲攻撃。',ninja:'特性：3秒間透明化。',pirate:'特性：海賊船で上昇し、落下時も救出。',knight:'特性：剣の範囲斬撃。',frog:'特性：追加の空中ジャンプ。',cat:'特性：赤いレーザーで指定した足場へ瞬間移動。',robot:'特性：ロケットパンチ。',leon:'特性：3秒間透明化。',spike:'特性：トゲを3発投げる。',dragon:'特性：3秒間パラシュート滑空。',poco:'特性：ギターの音波で前方の敵を攻撃。',mortis:'特性：短距離ダッシュ斬り。',bull:'特性：前方へ突進して敵を吹き飛ばす。',nita:'特性：クマの精霊を呼び出して周囲を攻撃。',penguin:'特性：氷の波で周囲を凍らせる。',rabbit:'特性：大ジャンプで高く跳ぶ。',panda:'特性：竹の盾で短時間ダメージを防ぐ。',astro:'特性：ロケットブーストで上昇し、短時間無敵。',lava:'特性：火炎の範囲攻撃。',angel:'特性：翼でゆっくり滑空。',demon:'特性：闇の衝撃波。',bee:'特性：羽ばたいて滑空。',ghost:'特性：幻影バリアで短時間無敵。',royal:'特性：ダイヤのバリアで短時間無敵。',shark:'特性：サメダッシュで前進。',rainbow:'特性：ランダムなボーナス能力を発動。',samurai:'特性：刀の範囲攻撃。',alien:'特性：重力波で周囲の敵を攻撃。',ice:'特性：氷のバリアで短時間無敵。',golem:'特性：超広範囲の衝撃波で敵・シャイゴースト・ボスにダメージ（ボスは2ダメージ）。1.5秒無敵。岩の鎧で最初の1回のダメージを耐える。1ゲーム8回。',glitchlord:'裏ボス級：狙った敵をクリックして3秒間バグ停止。専用ボタンで足元にグリッチ足場を手動設置（1ゲーム10回、1秒で消える）。超高速移動・超ジャンプ・HP3。'};
+function updateAbilityButton(){
+ const b=$('abilityBtn'),tb=$('touchAbility');if(!b)return;const gp=$('glitchPlatformBtn'),tgp=$('touchGlitchPlatform');if(gp)gp.style.display=curSkin==='glitchlord'?'inline-block':'none';if(tgp)tgp.style.display=curSkin==='glitchlord'?'inline-block':'none';if(gp){gp.disabled=curSkin!=='glitchlord'||ended||shopOpen||glitchPlatformUses<=0;gp.textContent=`👾 グリッチ足場 [G] (${glitchPlatformUses})`;}if(tgp){tgp.disabled=curSkin!=='glitchlord'||ended||shopOpen||glitchPlatformUses<=0;tgp.textContent=`👾 足場設置 (${glitchPlatformUses})`;}
+ const passive=curSkin==='def'||curSkin==='gold';
+ const txt=curSkin==='def'?'✨ 特性なし':curSkin==='gold'?'⭐ ポイント2倍':curSkin==='checkpoint'?`🚩 チェックポイント設置 (${Math.max(0,3-checkpointUses)})`:catTargeting?'🔴 行き先をタップ！':glitchTargeting?'👾 止める敵をクリック！':`✨ 特性を使う (${abilityUses})`;
+ const disabled=passive||ended||(curSkin==='checkpoint'?checkpointUses>=3:abilityUses<=0);
+ b.textContent=txt;b.disabled=disabled;
+ if(tb){tb.textContent=txt;tb.disabled=disabled}
+}
+function abilityRing(x,z,color=0xffe066,r=4){const m=new T.Mesh(new T.TorusGeometry(r,.12,8,48),new T.MeshBasicMaterial({color,transparent:true,opacity:.9}));m.rotation.x=Math.PI/2;m.position.set(x,pl.y+.12,z);lvl.add(m);abilityVisuals.push(m);setTimeout(()=>{if(m.parent)m.parent.remove(m);abilityVisuals=abilityVisuals.filter(q=>q!==m)},650)}
+function hurtEnemy(e,points=250){if(!e||e.st==='squash')return; e.st='squash';e.t=.35;e.g.scale.y=.2;kill(points);if(e.type==='octo')octoDrop(e)}
+function damageBoss(amount=1){if(!boss||boss.st==='dead'||boss.inv>0)return;boss.hp-=amount;boss.inv=.35;bossBar();bonus+=300;banner('💥 ボスに命中！',500);if(boss.hp<=0){boss.st='dead';boss.t=1.4;shots.forEach(q=>lvl.remove(q.m));shots=[];rings.forEach(q=>lvl.remove(q.m));rings=[];enemies.forEach(q=>lvl.remove(q.g));enemies=[]}}
+function fireAbilityProjectile(color,spread=0,count=1,speed=15){const forwardX=Math.cos(pl.yaw),forwardZ=-Math.sin(pl.yaw);for(let i=0;i<count;i++){const off=(i-(count-1)/2)*spread,m=mk(S,color,pl.x+.5,pl.y+1,pl.z,.24,.24,.24);m.material=new T.MeshBasicMaterial({color});lvl.add(m);abilityShots.push({m,x:pl.x+.5,y:pl.y+1,z:pl.z,vx:forwardX*speed+(-forwardZ)*off,vz:forwardZ*speed+forwardX*off,life:2.2,damage:1})}}
+function placeGlitchPlatform(){
+ if(curSkin!=='glitchlord'||ended||shopOpen||busy)return;
+ if(glitchPlatformUses<=0){banner('👾 グリッチ足場の使用回数がない！',900);return}
+ // 手動ボタンを押した瞬間、プレイヤーの足元に1秒だけ足場を生成
+ const top=pl.y-.12;
+ const p=pushPlat(pl.x-1.35,pl.x+1.35,top,pl.z-1.35,pl.z+1.35,0xff00e6,0x00eaff);
+ p.isAutoGlitch=true;
+ for(const m of p.g.children){if(m.material&&m.material.color){m.material.color.setHex(Math.random()<.5?0xff00e6:0x00eaff);m.material.emissive=new T.Color(m.material.color.getHex());m.material.emissiveIntensity=.75}}
+ autoPlatforms.push({p,g:p.g,life:1});
+ glitchPlatformUses=Math.max(0,glitchPlatformUses-1);
+ if(pl.vy<0&&pl.y-top<.65){pl.y=top+.03;pl.vy=0;pl.ground=true;pl.pi=p.i;lastSafe={x:pl.x,y:pl.y,z:pl.z,pi:pl.pi}}
+ abilityRing(pl.x,pl.z,0xff00e6,2.5);banner(`👾 手動グリッチ足場！ 残り${glitchPlatformUses}回・1秒で消える！`,900);updateAbilityButton();
+}
+function useAbility(){
+ if(ended||shopOpen||busy)return;
+ if(curSkin==='def'){banner('冒険者：特性・能力なし',850);return}
+ if(curSkin==='gold'){banner('⭐ ポイント2倍！',850);return}
+ if(curSkin==='nita'&&nitaBear&&nitaBear.g&&nitaBear.g.parent===lvl){banner('🐻 クマがまだ戦っているよ！ 倒れるまで次のクマは呼べない！',1200);return}
+ if(curSkin==='checkpoint'){
+   if(checkpointUses>=3){banner('🚩 このゲームの設置回数はもう0回！',1000);return}
+   if(activeCheckpoint){lvl.remove(activeCheckpoint.marker);lvl.remove(activeCheckpoint.platform.g);platforms=platforms.filter(q=>q!==activeCheckpoint.platform);activeCheckpoint=null}
+   const cpTop=pl.y;const cpPlatform=pushPlat(pl.x-1.25,pl.x+1.25,cpTop,pl.z-1.25,pl.z+1.25,0x1b9f9a,0x116b76);cpPlatform.isCheckpoint=true;
+   const marker=new T.Group();marker.position.set(pl.x,cpTop+.12,pl.z);marker.add(mk(B,0x19e5d4,0,.85,0,.12,1.7,.12),mk(B,0xffe16b,.42,1.35,0,.82,.55,.08),mk(B,0xffffff,.42,1.35,.045,.28,.28,.025),mk(B,0x111111,.56,1.35,.065,.28,.28,.025));lvl.add(marker);activeCheckpoint={x:pl.x,y:cpTop,z:pl.z,marker,platform:cpPlatform};checkpointUses++;pl.pi=cpPlatform.i;banner('🚩 チェックポイント設置！ あと'+(3-checkpointUses)+'回',1200);updateAbilityButton();return;
+ }
+ if(abilityUses<=0){banner('このゲームの特性使用回数は0回！',900);return}
+ if(curSkin==='cat') {catTargeting=true;banner('🔴 赤いレーザー：行きたい足場をタップ！',1300);updateAbilityButton();return}
+ if(curSkin==='glitchlord'){glitchTargeting=true;banner('👾 バグの支配者：止めたい敵をクリック！',1400);updateAbilityButton();return}
+ abilityUses--;updateAbilityButton();
+ if(curSkin==='potsu'){fireAbilityProjectile(0x8b5a2b,.13,5,14);banner('🟤 茶色いぽつぽつ弾！',750)}
+ else if(curSkin==='sanrio'){abilityRing(pl.x,pl.z,0x69d8ff,5.5);banner('📣「あなたの家まで送ってあげるよ！！」',1500);for(const e of enemies)if(Math.hypot(e.x-pl.x,e.z-pl.z)<7)hurtEnemy(e,350);if(boss&&Math.hypot(boss.x-pl.x,boss.z-pl.z)<8+(boss.r||0))damageBoss(1)}
+ else if(curSkin==='ninja'||curSkin==='leon'){pl.stealth=3;pl.inv=3;pm.visible=false;banner('🥷 透明化！3秒間見つからない！',1000)}
+ else if(curSkin==='pirate'){pl.vy=14;pl.ground=false;pl.inv=1.2;const ship=new T.Group();ship.add(mk(B,0x6b3f25,pl.x,pl.y-.35,pl.z,2.6,.22,1.3),mk(B,0xf2e6d0,pl.x,pl.y+.3,pl.z,1.1,.9,.12));lvl.add(ship);abilityVisuals.push(ship);setTimeout(()=>{if(ship.parent)ship.parent.remove(ship);abilityVisuals=abilityVisuals.filter(q=>q!==ship)},1200);banner('🏴‍☠️ 海賊船で上昇！',900)}
+ else if(curSkin==='golem'){shake=Math.max(shake,1.2);pl.inv=Math.max(pl.inv||0,1.5);abilityRing(pl.x,pl.z,0xc9a46a,3.5);abilityRing(pl.x,pl.z,0xffa530,7);abilityRing(pl.x,pl.z,0xff6a22,10.5);for(const e of [...enemies])if(e.st!=='squash'&&Math.hypot(e.x-pl.x,e.z-pl.z)<10.5&&Math.abs((e.y||0)-pl.y)<4)hurtEnemy(e,400);for(const h of [...ghosts])if(Math.hypot(h.x-pl.x,h.z-pl.z)<10.5){lvl.remove(h.g);ghosts=ghosts.filter(q=>q!==h);kill(250)}if(boss&&boss.st!=='dead'&&Math.hypot(boss.x-pl.x,boss.z-pl.z)<8+(boss.r||0))damageBoss(2);banner('🪨💥 ゴーレム・ドスン！！',1000)}
+  else if(curSkin==='knight'){abilityRing(pl.x+Math.cos(pl.yaw)*1.8,pl.z-Math.sin(pl.yaw)*1.8,0xcdeaff,3);for(const e of enemies)if(Math.hypot(e.x-pl.x,e.z-pl.z)<4&&((e.x-pl.x)*Math.cos(pl.yaw)+(e.z-pl.z)*(-Math.sin(pl.yaw))>-.5))hurtEnemy(e,300);if(boss&&Math.hypot(boss.x-pl.x,boss.z-pl.z)<5+(boss.r||0))damageBoss(1);banner('⚔️ 剣の範囲攻撃！',700)}
+ else if(curSkin==='frog'){pl.frogReady=true;banner('🐸 追加ジャンプ準備OK！空中でもう一度ジャンプ！',1100)}
+ else if(curSkin==='robot'){fireAbilityProjectile(0xff6533,.02,1,23);banner('🤖 ロケットパンチ発射！',700)}
+ else if(curSkin==='spike'){fireAbilityProjectile(0x6cce52,.18,3,17);banner('🌵 トゲを投げた！',700)}
+ else if(curSkin==='dragon'){pl.gliding=3;pl.inv=Math.max(pl.inv||0,.25);const chute=new T.Group();chute.add(mk(S,0xe53935,0,0,0,1.25,.42,.9),mk(B,0xffd54a,0,-.35,0,1.8,.035,.035),mk(B,0xffd54a,0,-.35,0,.035,.035,1.3));chute.position.set(pl.x,pl.y+3.0,pl.z);lvl.add(chute);pl.parachute=chute;abilityVisuals.push(chute);banner('🐉 パラシュート滑空！',900)}
+ else if(curSkin==='astro'){pl.inv=1.4;pl.vy=Math.max(pl.vy,7);banner('🚀 宇宙ブースト！',800)}
+ else if(curSkin==='ice'){pl.inv=2;abilityRing(pl.x,pl.z,0x75eaff,2.5);banner('🧊 氷のバリア！',800)}
+ else if(curSkin==='angel'||curSkin==='bee'){pl.gliding=2.5;banner('🪽 羽ばたき滑空！',800)}
+ else if(curSkin==='ghost'){pl.inv=1.8;abilityRing(pl.x,pl.z,0xb18cff,3);banner('👻 幻影バリア！',800)}
+ else if(curSkin==='nita'){const g=new T.Group();g.add(mk(S,0x70452b,0,.68,0,.86,.9,.72),mk(S,0x9b6a42,.48,.95,0,.48,.52,.48),mk(S,0x9b6a42,.32,1.27,-.29,.22,.24,.2),mk(S,0x9b6a42,.32,1.27,.29,.22,.24,.2),mk(S,0xd8b48b,.73,.78,0,.28,.25,.34),mk(S,0x17120f,.83,1.03,-.12,.07,.08,.07),mk(S,0x17120f,.83,1.03,.12,.07,.08,.07),mk(S,0x24150e,.92,.82,0,.08,.07,.1));const hpBack=mk(B,0x262626,0,2.05,0,1.15,.13,.12),hpFill=mk(B,0x35ed59,-.0,2.05,.071,1.0,.085,.06);g.add(hpBack,hpFill);hpBack.userData.isBearHp=true;hpFill.userData.isBearHpFill=true;g.position.set(pl.x-1.5,pl.y,pl.z);lvl.add(g);nitaBear={g,hp:4,maxHp:4,hpFill,x:pl.x-1.5,y:pl.y,z:pl.z,vx:0,vz:0,vy:0,ground:true,target:null,attackT:0,inv:0,phase:Math.random()*6};banner('🐻 ニタのクマ召喚！ HP 4',1100)}
+ else if(curSkin==='samurai'||curSkin==='mortis'||curSkin==='bull'||curSkin==='poco'||curSkin==='lava'||curSkin==='alien'){const dash=['mortis','bull'].includes(curSkin);if(dash){pl.x+=Math.cos(pl.yaw)*3;pl.z-=Math.sin(pl.yaw)*3;pl.inv=.45}abilityRing(pl.x,pl.z,curSkin==='lava'?0xff4a18:0xffc45e,4.5);for(const e of enemies)if(Math.hypot(e.x-pl.x,e.z-pl.z)<4.5)hurtEnemy(e,300);if(boss&&Math.hypot(boss.x-pl.x,boss.z-pl.z)<5+(boss.r||0))damageBoss(1);banner(curSkin==='poco'?'🎸 ギター音波！':curSkin==='samurai'?'⚔️ 刀の一閃！':curSkin==='lava'?'🔥 火炎攻撃！':curSkin==='alien'?'🛸 重力波！':'💥 突進攻撃！',800)}
+ else if(curSkin==='penguin'){abilityRing(pl.x,pl.z,0x80eaff,4);for(const e of enemies)if(Math.hypot(e.x-pl.x,e.z-pl.z)<4)hurtEnemy(e,280);banner('🐧 氷の波！',700)}
+ else if(curSkin==='rabbit'){pl.vy=14;pl.ground=false;banner('🐇 スーパージャンプ！',800)}
+ else if(curSkin==='panda'||curSkin==='royal'){pl.inv=2.2;abilityRing(pl.x,pl.z,curSkin==='panda'?0x9cff72:0x4af7ff,2.5);banner(curSkin==='panda'?'🐼 竹の盾！':'💎 ダイヤバリア！',800)}
+ else if(curSkin==='shark'){pl.x+=Math.cos(pl.yaw)*4;pl.z-=Math.sin(pl.yaw)*4;pl.vy=Math.max(pl.vy,3);pl.inv=.7;banner('🦈 サメダッシュ！',700)}
+ else if(curSkin==='rainbow'){const r=Math.floor(Math.random()*12);const safePlatforms=platforms.filter(p=>p.x1>pl.x-1&&p.x0<pl.x+18&&Math.abs(p.top-pl.y)<5);if(r===0){bonus+=500;banner('🌈✨ 虹色ボーナス！ +500ポイント！',1100)}else if(r===1){pl.vy=16;pl.ground=false;banner('🌈🚀 虹色スーパージャンプ！',1100)}else if(r===2){pl.inv=5;banner('🌈🛡️ 虹色バリア！ 5秒無敵！',1100)}else if(r===3){for(const e of [...enemies])if(Math.hypot(e.x-pl.x,e.z-pl.z)<10)hurtEnemy(e,9999);if(boss&&Math.hypot(boss.x-pl.x,boss.z-pl.z)<12+(boss.r||0))damageBoss(1);banner('🌈💥 虹色スター大爆発！ 周囲の敵を一掃！',1200)}else if(r===4){gems+=3;banner('🌈💎 虹のクリスタル！ +3個！',1100)}else if(r===5){pl.gliding=5;pl.inv=Math.max(pl.inv||0,1);banner('🌈🪽 虹色ふわふわ滑空！',1100)}else if(r===6){bonus+=1000;banner('🌈⭐ スーパースター！ +1000ポイント！',1100)}else if(r===7){pl.vy=Math.max(pl.vy,10);pl.ground=false;pl.inv=2;banner('🌈☄️ 無敵ジャンプ！',1100)}else if(r===8){pl.x+=Math.cos(pl.yaw)*5;pl.z-=Math.sin(pl.yaw)*5;pl.inv=1.5;banner('🌈💨 虹色ダッシュ！',1100)}else if(r===9){if(safePlatforms.length){const p=safePlatforms[Math.floor(Math.random()*safePlatforms.length)];pl.x=Math.max(p.x0+.5,Math.min(p.x1-.5,pl.x+6));pl.y=p.top+.2;pl.z=Math.max(p.z0+.5,Math.min(p.z1-.5,pl.z));pl.vy=0;pl.ground=true;pl.pi=p.i;lastSafe={x:pl.x,y:pl.y,z:pl.z,pi:pl.pi}}else{pl.inv=3;pl.vy=12;pl.ground=false}banner('🌈🌀 虹のワープ！',1100)}else if(r===10){pl.inv=2.5;pl.vy=14;pl.ground=false;bonus+=250;banner('🌈👑 虹色スター降臨！ 無敵＋ジャンプ＋250点！',1200)}else{for(const e of [...enemies])if(Math.hypot(e.x-pl.x,e.z-pl.z)<14)hurtEnemy(e,500);if(boss&&Math.hypot(boss.x-pl.x,boss.z-pl.z)<14+(boss.r||0))damageBoss(1);abilityRing(pl.x,pl.z,0xff45df,7);banner('🌈🌟 レインボーウェーブ！',1100)}}
+ else if(curSkin==='glitchlord'){abilityUses=Math.min(5,abilityUses+1);glitchTargeting=true;banner('👾 ターゲット指定！敵をクリックすると3秒バグ停止！',1400);updateAbilityButton();return}
+ else if(curSkin==='samurai'||curSkin==='mortis'||curSkin==='bull'||curSkin==='poco'){abilityRing(pl.x,pl.z,0xffc45e,4.5);for(const e of enemies)if(Math.hypot(e.x-pl.x,e.z-pl.z)<4.5)hurtEnemy(e,300);if(boss&&Math.hypot(boss.x-pl.x,boss.z-pl.z)<5+(boss.r||0))damageBoss(1);banner('💥 特殊攻撃！',700)}
+ else {abilityRing(pl.x,pl.z,0x7bffe4,3.5);for(const e of enemies)if(Math.hypot(e.x-pl.x,e.z-pl.z)<3.5)hurtEnemy(e,250);banner('✨ スキン特性発動！',700)}
+}
+$('game').addEventListener('pointerdown',e=>{if((!catTargeting&&!glitchTargeting)||ended||shopOpen)return;const rect=$('game').getBoundingClientRect(),ndc=new T.Vector2((e.clientX-rect.left)/rect.width*2-1,-((e.clientY-rect.top)/rect.height*2-1)),ray=new T.Raycaster();ray.setFromCamera(ndc,cam);if(glitchTargeting){scene.updateMatrixWorld(true);const candidates=[...enemies.filter(q=>q.st!=='squash').map(q=>({obj:q.g,ref:q,kind:'enemy'})),...ghosts.map(q=>({obj:q.g,ref:q,kind:'ghost'}))];if(boss&&boss.st!=='dead')candidates.push({obj:boss.g,ref:boss,kind:'boss'});let chosen=null,distHit=Infinity;for(const c of candidates){const hits=ray.intersectObject(c.obj,true);if(hits.length&&hits[0].distance<distHit){distHit=hits[0].distance;chosen=c}}if(!chosen){banner('👾 敵の姿をクリックしてね！',800);return}const t=chosen.ref;t.frozen=3;t.glitchTimer=3;if(t.glitchFx&&t.glitchFx.parent)t.glitchFx.parent.remove(t.glitchFx);const fx=new T.Group();for(let i=0;i<9;i++){const col=[0xff00e6,0x00ffff,0x8a2bff,0xffffff][i%4],q=mk(B,col,(Math.random()-.5)*1.5,Math.random()*1.8,(Math.random()-.5)*1.4,.12+Math.random()*.22,.08+Math.random()*.3,.08);fx.add(q)}t.g.add(fx);t.glitchFx=fx;t.glitchKind=chosen.kind;glitchTargeting=false;abilityUses=Math.max(0,abilityUses-1);abilityRing(pl.x,pl.z,0xff00e6,3.4);banner('👾 GLITCH！ '+(chosen.kind==='boss'?'ボス':chosen.kind==='ghost'?'シャイゴースト':'敵')+'を3秒停止！',1300);updateAbilityButton();e.preventDefault();return}const plane=new T.Plane(new T.Vector3(0,1,0),0),pt=new T.Vector3();ray.ray.intersectPlane(plane,pt);if(!pt||!Number.isFinite(pt.x)||!Number.isFinite(pt.z))return;
+ let best=null,bd=Infinity;for(const p of platforms){const x=Math.max(p.x0+.4,Math.min(p.x1-.4,pt.x)),z=Math.max(p.z0+.4,Math.min(p.z1-.4,pt.z));const d=Math.hypot(x-pt.x,z-pt.z);if(d<bd){bd=d;best={p,x,z}}}if(!best||Math.hypot(best.x-pl.x,best.z-pl.z)>22){banner('🔴 近くの足場を選んでね！',800);return}const laserGeo=new T.BufferGeometry().setFromPoints([new T.Vector3(pl.x,pl.y+1,pl.z),new T.Vector3(best.x,best.p.top+.4,best.z)]),laser=new T.Line(laserGeo,new T.LineBasicMaterial({color:0xff2222}));lvl.add(laser);setTimeout(()=>{if(laser.parent)laser.parent.remove(laser);laserGeo.dispose()},450);abilityUses--;pl.x=best.x;pl.z=best.z;pl.y=best.p.top+.15;pl.vy=0;pl.ground=true;pl.pi=best.p.i;pl.inv=1;lastSafe={x:pl.x,y:pl.y,z:pl.z,pi:pl.pi};catTargeting=false;abilityRing(pl.x,pl.z,0xff2222,1.8);banner('🐈 瞬間移動！',700);updateAbilityButton();e.preventDefault();}, {passive:false});
+function updateAbilityShots(dt){for(const s of abilityShots){s.x+=s.vx*dt;s.z+=s.vz*dt;s.y+=.15*dt;s.life-=dt;s.m.position.set(s.x,s.y,s.z);let hitTarget=false;for(const e of enemies){if(e.st==='squash')continue;if(Math.hypot(e.x-s.x,e.z-s.z)<.95&&Math.abs((e.y||e.p.top)-s.y)<1.7){hurtEnemy(e,300);hitTarget=true;break}}if(!hitTarget&&boss&&boss.st!=='dead'&&Math.hypot(boss.x-s.x,boss.z-s.z)<3.8+(boss.r||0)&&Math.abs(boss.y+1.5-s.y)<4+(boss.r?6:0)){damageBoss(1);hitTarget=true}if(hitTarget)s.life=0}abilityShots=abilityShots.filter(s=>{if(s.life<=0||s.x<pl.x-35||s.x>pl.x+35||Math.abs(s.z-pl.z)>25){lvl.remove(s.m);return false}return true})}
+function updateHUD(){updateAbilityButton();$('height').textContent=meters()+' m';$('record').textContent=maxHeight+' m';$('score').textContent=highScore;$('currentScore').textContent=score;$('falls').textContent=falls;$('attempts').textContent=attempts;$('gems').textContent=gems;$('kills').textContent=kills;$('pw').textContent=pl.giantTimer>0?'巨大エネルギー '+pl.giantTimer.toFixed(1)+'秒':pl.big?'パワーオーブ':'なし';const gh=$('glitchHpRow');if(gh){gh.style.display=curSkin==='glitchlord'?'block':'none';$('glitchHp').textContent='♥'.repeat(Math.max(0,pl.hp||0))+'♡'.repeat(Math.max(0,3-(pl.hp||0)))+' '+Math.max(0,pl.hp||0)+'/3';}$('time').textContent=elapsed.toFixed(1)+'秒';$('best').textContent=bestTime===null?'--':bestTime.toFixed(1)+'秒'}
+function restart(){if(!ended&&elapsed>0)falls++;attempts++;build();$('message').textContent='再挑戦！ 敵は上から踏む！壁は壁ジャンプで登ろう！'}
+function help(){alert('【操作方法】\n3Dモード：W/↑・S/↓で前後、A/←・D/→で左右\nSPACE：ジャンプ\nSHIFT：ダッシュ\nマウスドラッグ：視点回転（PC）\nマウスホイール：ズーム\n画面右上の「📷 俯瞰カメラ」：三人称/俯瞰を切り替え\nスマホ：左下の丸いスティックをドラッグして移動、右下の「ジャンプ」「ダッシュ」をタップ\n\n【操作切替】\n右上の「🎮 操作」ボタンで、キーボード操作とタップ操作を切り替えられます（PCでもOK）。\n\n【壁ジャンプ】\n高い石の壁に空中で張り付いたら、もう一度ジャンプで壁を蹴って上へ！壁に向かって押し続けるとゆっくり滑り落ちます。\n\n【敵】\n・プルン(スライム)：近づくと追いかけてくる。踏むと倒せる(+200)\n・ローラン(アルマジロ)：踏むと丸まる。触れると転がり出し、敵を倒すが自分も危険！\n・バット：空中を飛ぶ。踏むか避けよう\n・シャイゴースト：こっちを見ていない間だけ追いかけてくる！後ろへ動いて振り向き、見つめると恥ずかしがって止まる。追いかけてくるのは、そのゴーストがいた足場から前後2つ分の足場までの範囲だけ。範囲の外に出るとあきらめて元の場所に戻る（踏めない）\n・回転バー：回るバーをジャンプで飛び越えよう\n・ドスン岩：近づくと落ちてくる！すぐ離れよう\n・トゲ：踏むとミス。横から回り込んで避けられる\n・足場の横から落ちてもミス！\n・ボス戦：一定の距離ごとにボス（マグマドラゴン）の広い部屋へ移動！噴射前に地面が暗くなるマグマ噴射に注意！通常ステージにはトゲ山・回転トゲ棒・マグマ溜まり・踏むと崩れる橋・巨大振り子が出現！崩れる橋は踏んだらすぐジャンプ、巨大振り子は振れるタイミングを見て通り抜けよう！ボスがジャンプで着地して目を回している間に、頭の上から踏んで倒そう。ジャンプ着地の衝撃波と、飛んでくる玉はジャンプでよけよう。倒すと報酬（💎・スコア・パワーオーブ）をもらって元のステージに戻るよ\n・岩盤の破壊神（2体目のボス）：超巨大パンチは赤い円の外へ！地震は光った瞬間にジャンプ！落石は影が出たら動いて回避！パンチの後や地震の後は「核」が出るので、ジャンプで上から踏もう\n・パワーオーブ：青く光る結晶。取ると大きくなり、ダメージを1回だけ防ぐ。巨大エネルギーコアはさらに巨大化して10秒間無敵になる！\n・チェックポイントマン：特性ボタンで今いる場所にチェックポイントを設置。落下や敵の攻撃でミスすると、1回だけそこへ復活して消える。1ゲーム3回まで設置可能。\n・スキン特性：画面の「✨ 特性を使う」ボタンで使用（通常は1ゲーム5回）。冒険者は能力なし、ゴールドはポイント2倍。ねこはボタン後に行きたい足場をクリック/タップ！ バグの支配者は専用キー「G」または「👾 グリッチ足場 [G]」ボタンで足元に1秒だけの足場を手動設置できる（1ゲーム10回）。\n・クリスタル +100点（貯めてスキン屋でスキンを買えます）')}
+function resetRecords(){if(!confirm('ハイスコア・最高高度・ベストタイムを消しますか？'))return;highScore=0;maxHeight=0;bestTime=null;try{localStorage.removeItem('fallHighScore');localStorage.removeItem('fallMaxHeight');localStorage.removeItem('fallBestTime')}catch(e){}updateHUD()}
+function fall(){if(ended)return;if(curSkin==='checkpoint'&&activeCheckpoint&&checkpointUses<=3){const cp=activeCheckpoint;activeCheckpoint=null;if(cp.marker&&cp.marker.parent)cp.marker.parent.remove(cp.marker);pl.x=cp.x;pl.y=cp.y+.08;pl.z=cp.z;pl.vy=0;pl.ground=true;pl.pi=cp.platform.i;pl.inv=2.2;pl.big=false;pl.giantTimer=0;pl.stealth=0;pl.gliding=0;lastSafe={x:pl.x,y:pl.y,z:pl.z,pi:pl.pi};dist=Math.max(dist,pl.x);bonus+=100;banner('🚩 チェックポイントで復活！',1300);updateAbilityButton();updateHUD();return}ended=true;falls++;maxHeight=Math.max(maxHeight,meters());highScore=Math.max(highScore,score);if(bestTime===null||elapsed<bestTime)bestTime=elapsed;try{localStorage.setItem('fallHighScore',highScore);localStorage.setItem('fallMaxHeight',maxHeight);localStorage.setItem('fallBestTime',bestTime)}catch(e){}$('resultHeight').textContent='進んだ距離：'+meters()+' m';$('resultScore').textContent='今回のスコア：'+score+' ／ ハイスコア：'+highScore;$('resultRecord').textContent='最高距離：'+maxHeight+' m　ベストタイム：'+bestTime.toFixed(1)+'秒';$('result').style.display='flex';updateHUD()}
+// ダメージ処理：キノコで大きくなっていれば1回だけ耐える
+function hit(){if(ended)return true;if(pl.inv>0||pl.giantTimer>0)return false;if(pl.big){pl.big=false;pl.inv=1.5;pl.vy=8;return false}if(curSkin==='glitchlord'){pl.hp=Math.max(0,(pl.hp??3)-1);pl.inv=.8;pl.vy=Math.max(pl.vy,5.5);bonus+=50;banner('👾 バグの支配者 被弾！ HP '+pl.hp+'/3',850);updateHUD();if(pl.hp<=0){banner('💥 バグの支配者のHPがゼロ！',1000);fall();return true}return false}fall();return ended}
+let mushrooms=[],ghosts=[],stageHazards=[],ghostT=14,pid=0;
+function addMushroom(x,y,z,giant=false){
+ // パワーアイテムはキノコ型ではなく、通常は青いエネルギーオーブ、巨大版は金色の巨大クリスタルにする
+ const g=new T.Group();
+ if(giant){
+   const core=mk(new T.OctahedronGeometry(.58,1),0xffbd35,0,.05,0,1,1.25,1);
+   core.material.emissive=new T.Color(0x8b4300);core.material.emissiveIntensity=.8;g.add(core);
+   const inner=mk(S,0xfff0a0,0,.05,0,.38,.48,.38);inner.material.emissive=new T.Color(0xffb300);inner.material.emissiveIntensity=1.2;g.add(inner);
+   const ring1=mk(new T.TorusGeometry(.78,.055,8,32),0xffe66d,0,0,0,1,1,1);ring1.rotation.x=Math.PI/2;g.add(ring1);
+   const ring2=mk(new T.TorusGeometry(.9,.035,8,32),0xff8b24,0,0,0,1,1,1);ring2.rotation.y=Math.PI/2;g.add(ring2);
+   for(let i=0;i<6;i++){const a=i*Math.PI/3;const shard=mk(new T.OctahedronGeometry(.16,0),0xfff4c2,Math.cos(a)*.82,Math.sin(i*1.7)*.12,Math.sin(a)*.82,.8,.8,.8);g.add(shard)}
+   g.scale.setScalar(1.65);
+ }else{
+   const orb=mk(S,0x36cfff,0,0,0,.42,.42,.42);orb.material.emissive=new T.Color(0x087ac4);orb.material.emissiveIntensity=.9;g.add(orb);
+   const crystal=mk(new T.OctahedronGeometry(.34,1),0x8af4ff,0,0,0,1,1.2,1);crystal.material.emissive=new T.Color(0x087ac4);crystal.material.emissiveIntensity=.7;g.add(crystal);
+   const ring=mk(new T.TorusGeometry(.58,.035,8,28),0x9cf5ff,0,0,0,1,1,1);ring.rotation.x=Math.PI/2;g.add(ring);
+   for(let i=0;i<4;i++){const a=i*Math.PI/2;g.add(mk(S,0xe7ffff,Math.cos(a)*.56,Math.sin(i*2)*.09,Math.sin(a)*.56,.075,.075,.075))}
+ }
+ g.position.set(x,y,z);lvl.add(g);mushrooms.push({g,x,y,z,by:y,ph:Math.random()*6,giant,got:false})
+}const idxAt=x=>{let r=platforms.length?platforms[platforms.length-1].i:0;for(const p of platforms)if(x<=p.x1){r=p.i;break}return r};
+function spawnGhost(x,y,z){if(gameMode==='2d')z=0;const g=new T.Group(),bm=new T.MeshLambertMaterial({color:0xd6f7ff,transparent:true,opacity:1});
+const P=(ge,x,y,z,sx,sy,sz)=>{const o=mk(ge,0,x,y,z,sx,sy,sz);o.material=bm;return o};
+const sk=P(C,0,-.75,0,.95,.7,.95);sk.rotation.x=Math.PI;
+const hl=P(S,.25,-.25,-.55,.3,.3,.3),hr=P(S,.25,-.25,.55,.3,.3,.3),mouth=mk(S,0x2a1030,.52,-.15,0,.12,.22,.2);
+g.add(P(S,0,0,0,1.1,1.25,1.1),sk,P(S,-.45,-.5,0,.4,.5,.4),hl,hr,mouth,mk(S,0x111122,.5,.2,-.2,.16,.2,.16),mk(S,0x111122,.5,.2,.2,.16,.2,.16),mk(S,0xff8fa3,.48,0,-.33,.18,.1,.1),mk(S,0xff8fa3,.48,0,.33,.18,.1,.1),P(S,0,.8,0,.2,.34,.2),P(S,-.05,1.0,0,.12,.2,.12),mk(S,0xffffff,.57,.27,-.2,.06,.06,.06),mk(S,0xffffff,.57,.27,.2,.06,.06,.06));
+g.userData={hl,hr,mouth,bm};g.position.set(x,y,z);lvl.add(g);ghosts.push({g,x,y,z,ph:Math.random()*6,hx:x,hy:y,hz:z,hi:idxAt(x),isShyGhost:true})}
+// シャイゴースト：こっちを見ていない時だけ追いかけ、見つめると恥ずかしがって止まる
+function stepGhosts(dt){
+for(const h of ghosts){if(h.frozen>0){h.frozen=Math.max(0,h.frozen-dt);h.g.position.set(h.x,h.y,h.z);if(h.glitchFx){h.glitchFx.rotation.y+=dt*9;h.glitchFx.position.y=Math.sin(clock*25)*.15}if(h.frozen<=0&&h.glitchFx){h.g.remove(h.glitchFx);h.glitchFx=null}continue}if(pl.stealth>0){h.ph+=dt;h.g.position.set(h.x,h.y+Math.sin(h.ph)*.12,h.z);continue}const dx=pl.x-h.x,dy=pl.y+.8-h.y,dz=pl.z-h.z,d=Math.hypot(dx,dy,dz)||1,dxz=Math.hypot(dx,dz)||1;
+const shy=(Math.cos(pl.yaw)*-dx-Math.sin(pl.yaw)*-dz)/dxz>.35;h.ph+=dt*3;const near=Math.abs(h.hi-(pl.pi||0))<=2;
+if(!near){const hx=h.hx-h.x,hy=h.hy-h.y,hz=h.hz-h.z,hd=Math.hypot(hx,hy,hz);if(hd>.05){const m=Math.min(hd,3*dt);h.x+=hx/hd*m;h.y+=hy/hd*m;h.z+=hz/hd*m}}
+else if(!shy){h.x+=dx/d*5*dt;h.y+=dy/d*3*dt;h.z+=dz/d*5*dt}
+const u=h.g.userData;u.bm.opacity+=((shy?.45:1)-u.bm.opacity)*Math.min(1,dt*8);
+u.hl.position.set(shy?.55:.25,shy?.18:-.25,shy?-.18:-.55);u.hr.position.set(shy?.55:.25,shy?.18:-.25,shy?.18:.55);u.mouth.visible=!shy;
+h.g.position.set(h.x,h.y+Math.sin(h.ph)*.12,h.z);h.g.rotation.y=Math.atan2(-dz,dx);
+if(!shy&&near&&d<1.05){if(hit())return true}}
+ghosts=ghosts.filter(h=>{if(h.x<pl.x-35){lvl.remove(h.g);return false}return true});return false}
+// ===== ボス戦 =====
+let boss=null,saved=null,bossN=0,nextBoss=300,busy=false,shots=[],rings=[],bossHazards=[],bossMushT=16+Math.random()*10;
+let shake=0,bossRocks=[],fxP=[],inkShots=[],inkT=0,zPools=[];function bossKind(){const f=new URLSearchParams(location.search).get('boss');return f==='rock'||f==='magma'||f==='zombie'?f:(((bossN+1)%3)===1?'magma':((bossN+1)%3)===2?'rock':'zombie')}const DG=new T.DodecahedronGeometry(1,0),CIRC=new T.CircleGeometry(1,28),ROCKMAT=new T.MeshLambertMaterial({color:0x7a7066});
+const sky=a=>{scene.background=new T.Color(a?0x2b1a4d:0x6cc3ee);scene.fog.color.set(a?0x3a2566:0x8fd3f2)};
+function banner(t,ms){const b=$('banner');b.textContent=t;b.style.opacity=1;setTimeout(()=>b.style.opacity=0,ms)}
+function fade(on){$('fade').style.opacity=on?1:0}
+function bossBar(){$('bossfill').style.width=(100*Math.max(0,boss.hp)/boss.max)+'%'}
+function makeBoss(){
+// マグマドラゴン：翼・尻尾・燃える背びれ・マグマの亀裂を持つ火竜
+const g=new T.Group(),bm=new T.MeshLambertMaterial({color:0x49245f}),dark=mm(0x171322);
+const glow=new T.MeshBasicMaterial({color:0xff6a22}),eyeM=new T.MeshBasicMaterial({color:0xffee55}),flameM=new T.MeshBasicMaterial({color:0xffb02e});
+const body=new T.Mesh(S,bm);body.scale.set(3.8,2.8,3.7);body.position.set(0,1.45,0);g.add(body);
+const chest=new T.Mesh(S,glow);chest.scale.set(.75,.95,1.15);chest.position.set(2.0,1.65,0);g.add(chest);
+const sz=(x,y)=>1.85*Math.sqrt(Math.max(.05,1-(x/1.9)**2-((y-1.45)/1.4)**2))+.03;
+for(const s of[-1,1])for(let i=0;i<6;i++){const x=-1.2+i*.5+(i%2)*.1,y=1.0+(i*37%10)*.12,c=new T.Mesh(B,glow);c.scale.set(.8,.1,.07);c.position.set(x,y,s*sz(x,y));c.rotation.z=(i%2?.6:-.5);g.add(c)}
+// 脚と爪
+for(const x of[1.1,-1.3])for(const z of[-1.35,1.35]){g.add(mk(S,0x3b244e,x,.3,z,1.3,.7,1.0));for(let t=-1;t<=1;t++){const cl=mk(C,0xf2e8d5,x+.7,.2,z+t*.3,.16,.42,.16);cl.rotation.z=-Math.PI/2;g.add(cl)}}
+// 首と頭
+g.add(mk(S,0x3b244e,1.7,2.1,0,1.3,1.4,1.5));
+g.add(mk(S,0x3b244e,2.25,2.55,0,1.0,.9,1.05));g.add(mk(S,0x3b244e,2.85,2.4,0,.9,.55,.75));g.add(mk(S,0x2a1a38,2.7,2.05,0,.95,.3,.7));
+for(const z of[-.28,-.1,.1,.28])g.add(mk(C,0xf2e8d5,2.95,2.2,z,.1,.3,.1));
+for(const z of[-.2,.2]){const n=new T.Mesh(S,glow);n.scale.setScalar(.12);n.position.set(3.25,2.55,z);g.add(n)}
+for(const z of[-.48,.48]){const e=new T.Mesh(S,eyeM);e.scale.set(.16,.19,.16);e.position.set(3.08,2.72,z);g.add(e);g.add(mk(B,0x171322,3.17,2.72,z,.04,.2,.06));g.add(mk(B,0x171322,3.05,3.0,z,.12,.12,.42));g.add(mk(C,0xf2e8d5,2.92,2.05,z,.18,.35,.18))}
+for(const z of[-.68,.68]){const h=mk(C,0xff4a22,1.85,3.25,z,.38,.72,.38);h.rotation.z=-.35;g.add(h);const h2=mk(C,0xffc247,1.5,3.3,z*1.5,.26,.95,.26);h2.rotation.z=-.7;g.add(h2);const ck=mk(C,0xff6a32,2.0,2.4,z*1.45,.22,.55,.22);ck.rotation.x=z>0?1.2:-1.2;g.add(ck)}
+// 肩の装甲・背中のトゲ
+for(const z of[-1.25,1.25]){g.add(mk(S,0x292b45,1.0,2.05,z,.85,.65,.65));for(let i=0;i<3;i++){const sp=mk(C,0xff6a32,-.8-i*.7,2.7-i*.12,z,.3,.62,.3);sp.rotation.z=-.35;g.add(sp)}}
+for(let i=0;i<7;i++){const x=1.2-i*.65,y=1.45+1.4*Math.sqrt(Math.max(0,1-(x/1.9)**2))+.15,sp=mk(C,i%2?0xffc247:0xff6a32,x,y,0,.3,.55+(i%3)*.1,.3);sp.rotation.z=-.25;g.add(sp)}
+const crest=mk(C,0xffc247,3.05,3.25,0,.32,.52,.32);crest.rotation.z=Math.PI/2;g.add(crest);
+// 背中の炎
+const flames=[];for(let i=0;i<5;i++){const f=new T.Mesh(C,flameM);f.position.set(.9-i*.8,3.1,(i%2?.35:-.35));f.userData.y0=3.1;f.scale.set(.5,1,.5);g.add(f);flames.push(f)}
+// 翼
+const wings=[];
+for(const s of[-1,1]){const w=new T.Group();w.position.set(-.2,2.4,s*1.5);g.add(w);
+ w.add(mk(B,0x292b45,-.1,.2,s*1.9,.28,.28,3.7));
+ for(let i=0;i<3;i++){const a=.3+i*.35,len=2.8-i*.5,dx=-Math.sin(a),dz=s*Math.cos(a);
+  const bone=mk(B,0x292b45,-.1+dx*len/2,.15,s*.3+dz*len/2,.15,.15,len);bone.rotation.y=-s*a;w.add(bone);
+  const am=a+.17,lm=2.5-i*.45,pan=mk(B,i%2?0xd9482c:0xb0302a,-.1-Math.sin(am)*lm/2,.1,s*.3+s*Math.cos(am)*lm/2,1.1,.04,lm);pan.rotation.y=-s*am;w.add(pan)}
+ wings.push(w)}
+// 尻尾
+const tail=new T.Group();tail.position.set(-1.8,1.1,0);g.add(tail);
+const tailSegs=[];let par=tail;
+for(let i=0;i<5;i++){const seg=new T.Group();seg.position.set(i?-1.0:-.5,i?-.04:0,0);par.add(seg);const r=[1.5,1.3,1.1,.9,.7][i];seg.add(mk(S,i%2?0x3b244e:0x49245f,0,0,0,r,r*.85,r));seg.add(mk(C,0xff6a32,0,r*.45,0,.22,.5,.22));par=seg;tailSegs.push(seg)}
+const tip=new T.Mesh(C,flameM);tip.rotation.z=Math.PI/2;tip.position.set(-.8,0,0);tip.scale.set(.6,1.5,.6);par.add(tip);
+g.userData={bm,glow,flames,wings,tailSegs,flameM};return g} 
+
+function makeBossHazards(){
+  // ボス戦専用：噴射前に地面が暗くなって警告、その後マグマが噴き上がる
+  for(const [x,z] of [[8,-12],[20,12],[30,-8]]){
+    const g=new T.Group();g.position.set(x,0,z);
+    const base=mk(B,0x4a2030,0,.06,0,3.1,.14,2.5);
+    const warning=mk(B,0x211b2b,0,.15,0,2.65,.08,2.05);
+    const glow=mk(B,0xff6a22,0,.2,0,1.9,.06,1.35);
+    const jet=new T.Group();jet.position.y=.3;
+    for(let i=0;i<5;i++){const m=mk(C,i%2?0xff4a18:0xffc247,(Math.random()-.5)*1.45,.9+Math.random()*1.5,(Math.random()-.5)*1.2,.32,1.9,.32);jet.add(m)}
+    jet.visible=false;g.add(base,warning,glow,jet);lvl.add(g);
+    bossHazards.push({type:'geyser',g,x,z,r:1.8,t:Math.random()*4,phase:'idle',warning,glow,jet});
+  }
+}
+function startBoss(){busy=true;keys={};joyEnd();fade(true);setTimeout(()=>{if(ended)return;enterArena();fade(false);banner('⚠ ボス出現！ '+(boss?boss.name:'マグマドラゴン'),1600);setTimeout(()=>{busy=false},1400)},600)}
+function enterArena(){saved={platforms,walls,enemies,crystals,mushrooms,ghosts,nextX,pid,lvl,pl:{x:pl.x,y:pl.y,z:pl.z,pi:pl.pi}};lvl.visible=false;lvl=new T.Group();scene.add(lvl);
+platforms=[];walls=[];enemies=[];crystals=[];mushrooms=[];ghosts=[];shots=[];rings=[];bossHazards=[];bossMushT=16+Math.random()*10;
+const BK=bossKind(),RA=BK==='rock',ZA=BK==='zombie';for(let i=0;i<4;i++)for(let j=0;j<3;j++){const x0=-10+i*13.4,z0=-19.4+j*13.4;pushPlat(x0,x0+12,0,z0,z0+12,ZA?((i+j)%2?0x4a5a48:0x3f4d3f):RA?((i+j)%2?0x6e6257:0x80746a):((i+j)%2?0x4d3a46:0x5f4a58),ZA?0x1f2a22:RA?0x3a322c:0x2a1824)}
+pl.x=-2;pl.y=0;pl.z=0;pl.vy=0;pl.ground=true;pl.pi=undefined;pl.inv=1;camY=0;sky(true);if(ZA){scene.background=new T.Color(0x0c1a18);scene.fog.color.set(0x1b3a33)}else if(RA){scene.background=new T.Color(0x24150f);scene.fog.color.set(0x3a241a)}else{scene.background=new T.Color(0x2a0f14);scene.fog.color.set(0x4a1a22)}
+bossN++;bossRocks=[];fxP=[];shake=0;inkReset();
+if(ZA){const hp=3+bossN;boss={kind:'zombie',name:'ゾンビキング',x:34,z:0,y:0,hp,max:hp,st:'idle',t:2.2,inv:0,g:makeZombie(true)};lvl.add(boss.g);boss.g.position.set(34,0,0);setupKing(boss);$('bossname').textContent='🧟 ゾンビキング';$('bossfill').style.background='linear-gradient(#9dff7a,#2e8b3a)'}
+else if(RA){const hp=3+bossN;boss={kind:'rock',name:'岩盤の破壊神',x:34,z:0,y:0,hp,max:hp,st:'idle',t:2.2,inv:0,g:makeRockBoss()};lvl.add(boss.g);boss.g.position.set(34,0,0);setupRockBoss(boss);$('bossname').textContent='🪨 岩盤の破壊神';$('bossfill').style.background='linear-gradient(#ffb04a,#c2410c)'}
+else{const hp=2+bossN;boss={kind:'magma',name:'マグマドラゴン',x:36,z:0,y:0,hp,max:hp,st:'idle',t:2,inv:0,g:makeBoss()};lvl.add(boss.g);boss.g.position.set(36,0,0);makeBossHazards();setupMagma(boss);$('bossname').textContent='🐉 マグマドラゴン';$('bossfill').style.background='linear-gradient(#ff6b6b,#d62828)'}
+$('bossbar').style.display='block';bossBar()}
+function reward(){const R=boss&&boss.kind==='rock'?350:20+10*bossN;gems+=R;bonus+=1000;pl.big=true;saveAll();banner('🎉 ボス撃破！ 💎+'+R+'　+1000点',2200);busy=true;setTimeout(()=>{fade(true);setTimeout(()=>{leaveArena();fade(false);busy=false},600)},2300)}
+function leaveArena(){if(!saved)return;scene.remove(lvl);const v=saved;lvl=v.lvl;lvl.visible=true;platforms=v.platforms;walls=v.walls;enemies=v.enemies;crystals=v.crystals;mushrooms=v.mushrooms;ghosts=v.ghosts;nextX=v.nextX;pid=v.pid;
+pl.x=v.pl.x;pl.y=v.pl.y;pl.z=v.pl.z;pl.pi=v.pl.pi;pl.vy=0;pl.inv=2.5;boss=null;saved=null;bossRocks=[];fxP=[];shake=0;inkReset();shots=[];rings=[];bossHazards=[];sky(false);camY=pl.y;nextBoss=meters()+500;$('bossbar').style.display='none'}
+// ===== 岩盤の破壊神（重量級ボス） =====
+const ROCK_R=7.2,LAVAMAT=new T.MeshBasicMaterial({color:0xff7a22}),GREENMAT=new T.MeshBasicMaterial({color:0x7dff5a}),DUSTMAT=new T.MeshLambertMaterial({color:0xb3a695});
+function burst(x,z,n,sp,size,rock){for(let i=0;i<n;i++){const a=Math.random()*6.283,s=sp*(.4+Math.random()*.8),m=new T.Mesh(DG,rock===3?GREENMAT:rock===2?LAVAMAT:rock?ROCKMAT:DUSTMAT),s0=size*(.5+Math.random());m.scale.setScalar(s0);m.position.set(x+Math.cos(a)*.6,.5,z+Math.sin(a)*.6);lvl.add(m);fxP.push({m,s0,vx:Math.cos(a)*s,vy:3+Math.random()*sp*.6,vz:Math.sin(a)*s,life:.8+Math.random()*.6})}}
+function crack(x,z){const g=new T.Group();g.position.set(x,.12,z);
+ for(let i=0;i<8;i++){const a=i/8*6.283+Math.random()*.4,len=3+Math.random()*3.5,cx=Math.cos(a)*len/2,cz=-Math.sin(a)*len/2;
+  const d=new T.Mesh(B,new T.MeshBasicMaterial({color:0x120c09,transparent:true,opacity:.85,depthWrite:false}));d.userData.a=.85;d.scale.set(len,.03,.32);d.position.set(cx,0,cz);d.rotation.y=a;g.add(d);
+  const l=new T.Mesh(B,new T.MeshBasicMaterial({color:0xff7a22,transparent:true,opacity:.9,depthWrite:false}));l.userData.a=.9;l.scale.set(len*.9,.035,.12);l.position.set(cx,.02,cz);l.rotation.y=a;g.add(l)}
+ lvl.add(g);fxP.push({m:g,crack:true,life:4})}
+function updateFx(dt){
+ for(const p of fxP){p.life-=dt;
+  if(p.crack){const o=Math.max(0,Math.min(1,p.life/1.2));for(const c of p.m.children)c.material.opacity=o*c.userData.a;continue}
+  p.vy-=14*dt;const m=p.m;m.position.x+=p.vx*dt;m.position.y=Math.max(.15,m.position.y+p.vy*dt);if(m.position.y<=.15){p.vy=0;p.vx*=.9;p.vz*=.9}m.position.z+=p.vz*dt;m.rotation.x+=dt*4;m.scale.setScalar(p.s0*Math.max(0,Math.min(1,p.life/.4)))}
+ fxP=fxP.filter(p=>{if(p.life<=0){lvl.remove(p.m);return false}return true})}
+function makeRockBoss(){
+ const g=new T.Group(),tor=new T.Group();tor.position.set(0,3.4,0);g.add(tor);
+ const M=[0x6d6459,0x57504a,0x857a6c,0x3f3a35,0x9a8d7c].map(c=>new T.MeshLambertMaterial({color:c}));
+ const glow=new T.MeshBasicMaterial({color:0xffa530}),crys=new T.MeshBasicMaterial({color:0xffc247});
+ const rk=(geo,m,x,y,z,sx,sy,sz,par,rx=0,ry=0,rz=0)=>{const o=new T.Mesh(geo,typeof m==='number'?M[m]:m);o.position.set(x,y,z);o.scale.set(sx,sy,sz);o.rotation.set(rx,ry,rz);par.add(o);return o};
+ const legs=[];
+ for(const s of[-1,1]){const lg=new T.Group();lg.position.set(0,0,s*2.6);g.add(lg);
+  rk(DG,1,0,2.3,0,2.2,2.3,2.1,lg);rk(DG,2,-.3,3.3,s*.4,1.6,1.4,1.5,lg,0,.5,0);rk(B,3,.8,.55,0,3.6,1.1,3.0,lg);
+  for(const t of[-1,0,1])rk(DG,4,2.2,.5,t*.95,.75,.6,.6,lg);
+  rk(B,glow,1.5,2.4,0,.2,1.8,.35,lg);legs.push(lg)}
+ for(let i=0;i<7;i++){const a=i/7*Math.PI*2;rk(DG,i%2?3:1,Math.cos(a)*2.6,.9,Math.sin(a)*3.0,.9,.8,.9,tor,0,a,0)}
+ rk(DG,3,0,.4,0,3.4,2.4,3.6,tor);
+ rk(DG,0,-.2,3.6,0,4.6,4.5,4.0,tor,0,.3,0);
+ rk(DG,2,1.4,5.6,2.4,2.4,2.0,1.7,tor,0,.5,.2);rk(DG,2,1.4,5.6,-2.4,2.4,2.0,1.7,tor,0,-.5,.2);
+ rk(DG,4,2.8,3.0,1.6,1.5,1.3,1.3,tor);rk(DG,4,2.8,3.0,-1.6,1.5,1.3,1.3,tor);
+ rk(DG,2,-3.3,4.8,0,2.6,3.1,2.8,tor,0,0,.3);
+ for(let i=0;i<5;i++){const k=Math.abs(i-2);rk(C,3,-3.6,7.8-k*.3,(i-2)*1.25,.9,2.8-k*.35,.9,tor,0,0,.5)}
+ for(let i=0;i<4;i++)rk(O,crys,-4.3,5.4+i*1.15,(i%2?1:-1)*(1.2+i*.35),5.5,8,5.5,tor,0,0,.45);
+ rk(B,glow,3.9,3.9,0,.5,3.0,.34,tor,0,0,.15);rk(B,glow,3.7,4.4,1.5,.45,2.0,.3,tor,0,.3,-.3);rk(B,glow,3.7,3.2,-1.5,.45,2.2,.3,tor,0,-.3,.35);
+ rk(B,glow,3.3,5.9,.7,.4,1.4,.3,tor,0,.2,.5);rk(B,glow,3.3,6.1,-.9,.4,1.2,.3,tor,0,-.2,-.4);rk(B,glow,3.6,2.4,.5,.4,1.1,.3,tor,0,.1,-.5);
+ const head=new T.Group();head.position.set(1.6,8.6,0);tor.add(head);
+ rk(DG,2,0,0,0,2.3,1.9,2.3,head,0,.4,0);rk(DG,0,-.9,.8,0,1.7,1.2,1.9,head);
+ rk(B,3,1.7,.55,0,.9,.5,3.0,head,0,0,-.25);rk(B,3,1.9,-.95,0,.8,.5,2.3,head);
+ for(const s of[-1,1]){rk(B,glow,2.15,.12,s*.85,.55,.46,.66,head);rk(C,3,-.2,1.9,s*1.1,.7,2.4,.7,head,s*.4,0,.1);rk(C,3,.6,1.5,s*1.8,.4,1.2,.4,head,s*.9,0,0)}
+ for(let i=0;i<5;i++)rk(C,4,2.25,-.45,(i-2)*.5,.28,.7,.28,head);
+ rk(B,glow,1.9,-.9,0,.2,.15,1.8,head);rk(B,glow,.8,1.6,0,.4,.15,.9,head,0,0,.3);
+ const arms=[];
+ for(const s of[-1,1]){
+  rk(DG,0,0,6.9,s*4.5,2.9,2.4,2.8,tor,0,s*.5,0);rk(DG,4,0,7.6,s*4.5,1.9,1.1,1.9,tor);
+  for(let i=0;i<3;i++)rk(C,3,-.8+i*.8,8.9-Math.abs(i-1)*.3,s*(4.5+i*.25),.55,1.5,.55,tor,0,0,-.3+i*.3);
+  const arm=new T.Group();arm.position.set(0,6.4,s*4.5);tor.add(arm);
+  rk(DG,1,0,-2.3,0,1.6,3.1,1.6,arm);rk(B,glow,.95,-2.5,0,.2,2.4,.3,arm);
+  rk(C,3,-1.6,-3.7,0,.8,1.9,.8,arm,0,0,1.5);
+  rk(DG,2,0,-4.9,0,1.9,2.4,1.9,arm,0,.3,0);
+  rk(DG,0,.2,-6.9,0,2.6,2.5,2.6,arm,0,.5,0);rk(B,glow,1.7,-6.6,0,.25,1.4,.5,arm);
+  for(const t of[-1,-.3,.4,1.1])rk(C,3,2.3,-6.2,t*.9,.55,1.0,.55,arm,0,0,-1.5);
+  arms.push(arm)}
+ const orbit=new T.Group();g.add(orbit);
+ for(let i=0;i<9;i++){const a=i/9*Math.PI*2,rr=8.6+(i%3)*1.1,y=4+(i%4)*2.4;const o=rk(DG,i%2?1:2,Math.cos(a)*rr,y,Math.sin(a)*rr,.5+(i%3)*.28,.45+(i%3)*.25,.5+(i%3)*.28,orbit,a,a,0);o.userData.y0=y}
+ g.userData={tor,arms,legs,glow,crys,orbit};return g}
+function setupRockBoss(b){
+ b.r=5;b.lean=0;b.arm=[0,0];b.tl=0;b.ta=[0,0];b.k=4;b.walk=0;b.track=true;b.hand=1;b.aim=0;b.last='';b.pulse=0;b.flash=0;b.coreS=0;b.rn=0;b.spT=0;
+ const core=new T.Mesh(O,new T.MeshBasicMaterial({color:0x58fff0}));core.visible=false;const inner=new T.Mesh(O,new T.MeshBasicMaterial({color:0xffffff}));inner.scale.setScalar(.55);core.add(inner);const h1=new T.Mesh(new T.TorusGeometry(.5,.025,6,32),new T.MeshBasicMaterial({color:0xffe066}));h1.rotation.x=Math.PI/2;core.add(h1);const h2=h1.clone();h2.rotation.set(.9,0,.6);core.add(h2);lvl.add(core);b.coreM=core;
+ const mark=new T.Mesh(CIRC,new T.MeshBasicMaterial({color:0xff2a2a,transparent:true,opacity:.35,depthWrite:false}));mark.rotation.x=-Math.PI/2;mark.position.y=.13;mark.visible=false;const mr=new T.Mesh(new T.RingGeometry(.9,1,48),new T.MeshBasicMaterial({color:0xffd0a0,transparent:true,opacity:.9,depthWrite:false,side:T.DoubleSide}));mr.position.z=.01;mark.add(mr);lvl.add(mark);b.mark=mark;
+ b.qfx=platforms.map(p=>{const o=new T.Mesh(B,new T.MeshBasicMaterial({color:0xff7a22,transparent:true,opacity:0,depthWrite:false}));o.position.set((p.x0+p.x1)/2,.1,(p.z0+p.z1)/2);o.scale.set(p.x1-p.x0,.04,p.z1-p.z0);lvl.add(o);return o});
+ const N=46,pos=new Float32Array(N*3);for(let i=0;i<N;i++){pos[i*3]=-8+Math.random()*50;pos[i*3+1]=Math.random()*16;pos[i*3+2]=-18+Math.random()*36}
+ const eg=new T.BufferGeometry();eg.setAttribute('position',new T.BufferAttribute(pos,3));const em=new T.Points(eg,new T.PointsMaterial({color:0xffa040,size:.45}));em.frustumCulled=false;lvl.add(em);b.embers=em}
+function rockRing(x,z){const m=new T.Mesh(new T.TorusGeometry(1,.22,6,48),mm(0xffa040));m.rotation.x=Math.PI/2;m.position.set(x,.2,z);lvl.add(m);rings.push({m,x,z,r:.5})}
+function spawnRock(x,z,w){
+ x=Math.max(-8,Math.min(41,x));z=gameMode==='2d'?(Math.random()-.5)*2:Math.max(-17,Math.min(17,z));
+ const m=new T.Mesh(DG,ROCKMAT);m.scale.set(1.4+Math.random()*.5,1.3+Math.random()*.4,1.4+Math.random()*.5);m.rotation.set(Math.random()*3,Math.random()*3,0);m.position.set(x,24,z);m.visible=false;lvl.add(m);
+ const sh=new T.Mesh(CIRC,new T.MeshBasicMaterial({color:0x1a0f0a,transparent:true,opacity:.25,depthWrite:false}));sh.rotation.x=-Math.PI/2;sh.position.set(x,.14,z);sh.scale.setScalar(.6);lvl.add(sh);
+ bossRocks.push({m,sh,x,z,y:24,t:w,w,ph:'warn'})}
+function updateRocks(dt){
+ for(const r of bossRocks){
+  if(r.ph==='warn'){r.t-=dt;const k=1-Math.max(0,r.t)/r.w;r.sh.scale.setScalar(.6+1.3*k);r.sh.material.opacity=.25+.45*k;r.sh.material.color.setHex(k>.7&&Math.floor(clock*14)%2?0x9a1d10:0x1a0f0a);if(r.t<=0){r.ph='fall';r.m.visible=true}}
+  else if(r.ph==='fall'){r.y-=40*dt;if(r.y<=1.3){r.y=1.3;r.ph='rest';r.t=.7;r.sh.visible=false;shake=Math.max(shake,.4);burst(r.x,r.z,9,6,.4,1);burst(r.x,r.z,6,3,.8,0)}r.m.position.y=r.y;r.m.rotation.x+=dt*3;
+   if(!r.hit&&Math.hypot(pl.x-r.x,pl.z-r.z)<1.9&&pl.y<r.y+1.6&&pl.y+1.4>r.y-1.5){r.hit=true;if(hit())return true}}
+  else if(r.ph==='rest'){r.t-=dt;const k=Math.max(0,r.t/.7);r.m.position.y=1.3-(1-k)*1.6;if(r.t<=0)r.ph='gone'}}
+ bossRocks=bossRocks.filter(r=>{if(r.ph==='gone'){lvl.remove(r.m);lvl.remove(r.sh);return false}return true});return false}
+function rockDead(b,dt){
+ if(b.rew)return false;
+ if(!b.dying){b.dying=true;for(const r of bossRocks){lvl.remove(r.m);lvl.remove(r.sh)}bossRocks=[];b.coreM.visible=false;b.mark.visible=false;for(const o of b.qfx)o.material.opacity=0;banner('💥 岩盤の破壊神が崩れ落ちる…！',1400)}
+ const k=Math.max(0,b.t/1.4);shake=Math.max(shake,.55);if(Math.random()<.6)burst(b.x+(Math.random()-.5)*9,b.z+(Math.random()-.5)*9,3,6,.8,Math.random()<.5?1:0);updateFx(dt);
+ b.g.position.set(b.x+(Math.random()-.5)*.4,-(1-k)*12,b.z);b.g.userData.tor.rotation.z=-(1-k)*.5;
+ if(b.t<=0){b.rew=true;lvl.remove(b.g);reward()}
+ return false}
+function stepRock(b,dt,oy){
+ const g=b.g,u=g.userData,tor=u.tor,R=ROCK_R,LAT=gameMode==='2d'?0:4.5,AL=Math.atan2(LAT,R);
+ const dx=pl.x-b.x,dz=pl.z-b.z,dd=Math.hypot(dx,dz)||1,half=b.hp<=Math.ceil(b.max/2),rage=!!b.rage;
+ if(half&&!b.rage){b.rage=true;u.glow.color.setHex(0xff3a12);banner('🔥 破壊神が激怒した！',1300);shake=Math.max(shake,.6)}
+ if(b.track){const want=Math.atan2(-dz,dx)+b.aim;let d=want-g.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));g.rotation.y+=d*Math.min(1,dt*(b.st==='punch0'?3.2:1.8))}
+ const fa=g.rotation.y,fx=Math.cos(fa),fz=-Math.sin(fa),sx=Math.sin(fa),sz=Math.cos(fa);
+ const setP=(l,a0,a1,k)=>{b.tl=l;b.ta[0]=a0;b.ta[1]=a1;b.k=k};
+ const clampB=()=>{b.x=Math.max(2,Math.min(38,b.x));b.z=gameMode==='2d'?b.z:Math.max(-11,Math.min(11,b.z))};
+ const hi=b.hand>0?1:0,vuln=b.st==='stuck'||b.st==='tired';
+ let mv=0;
+ if(b.st==='idle'){
+  b.track=true;b.aim=0;const sw=Math.sin(clock*1.6)*.06;setP(0,sw,-sw,3);
+  if(dd>R+2.4){mv=rage?3.1:2.3;b.x+=dx/dd*mv*dt;b.z+=dz/dd*mv*dt;clampB()}
+  if(b.t<=0){const r=Math.random();let pick=r<.42?'punch':r<.72?'rock':'quake';if(pick===b.last)pick=pick==='punch'?'rock':pick==='rock'?'quake':'punch';b.last=pick;
+   if(pick==='punch'){b.st='punch0';b.t=rage?.95:1.25;b.hand=Math.random()<.5?-1:1;b.aim=AL*b.hand;banner('⚠️ 巨大パンチ！ 赤い円から逃げろ！',1000)}
+   else if(pick==='rock'){b.st='rock0';b.t=1.0;banner('⚠️ 落石に注意！',1000)}
+   else{b.st='quake0';b.t=1.15;banner('⚠️ 地震！ 光ったらジャンプ！',1200)}}}
+ else if(b.st==='punch0'){
+  const h=b.hand>0?1:0;setP(-.3,0,0,5);b.ta[h]=2.75;b.ta[1-h]=-.35;
+  const lock=b.t<.38;if(lock)b.track=false;
+  if(!lock&&dd>R+1){b.x+=dx/dd*3.4*dt;b.z+=dz/dd*3.4*dt;clampB();mv=3.4}
+  const Px=b.x+fx*R+sx*LAT*b.hand,Pz=b.z+fz*R+sz*LAT*b.hand;
+  b.mark.visible=true;b.mark.position.x=Px;b.mark.position.z=Pz;b.mark.scale.setScalar(3.7);
+  b.mark.material.opacity=lock?(Math.floor(clock*16)%2?.7:.4):.3;b.mark.material.color.setHex(lock?0xff1010:0xff6a2a);
+  if(b.t<=0){b.st='punch';b.t=.2;b.Px=Px;b.Pz=Pz}}
+ else if(b.st==='punch'){
+  const h=b.hand>0?1:0;setP(.62,0,0,22);b.ta[h]=1.16;b.ta[1-h]=-.1;
+  if(b.t<=0){shake=1.2;b.mark.visible=false;
+   if(Math.hypot(pl.x-b.Px,pl.z-b.Pz)<3.7&&pl.y<1.6&&hit())return true;
+   rockRing(b.Px,b.Pz);burst(b.Px,b.Pz,26,10,.55,1);burst(b.Px,b.Pz,18,6,1.1,0);crack(b.Px,b.Pz);
+   for(let i=0;i<(rage?3:2);i++)spawnRock(pl.x+(Math.random()-.5)*6,pl.z+(Math.random()-.5)*6,.95);
+   b.st='stuck';b.t=rage?2.3:2.9;b.coreX=b.Px+fx*3.3;b.coreZ=b.Pz+fz*3.3;b.coreS=0;banner('💢 ドゴォォン！ 核を上から踏め！',1200)}}
+ else if(b.st==='stuck'){const h=b.hand>0?1:0;setP(.62,0,0,6);b.ta[h]=1.16;b.ta[1-h]=.25;if(b.t<=0){b.st='idle';b.t=rage?.9:1.4}}
+ else if(b.st==='rock0'){setP(-.3,2.75,2.75,5);shake=Math.max(shake,.25);if(b.t<=0){b.st='rock';b.rn=0;b.spT=0;b.endT=false}}
+ else if(b.st==='rock'){
+  setP(-.3,2.75+Math.sin(clock*12)*.12,2.75-Math.sin(clock*12)*.12,8);shake=Math.max(shake,.22);
+  const total=rage?15:10;b.spT-=dt;
+  if(b.rn<total&&b.spT<=0){let x,z;if(b.rn%2===0){x=pl.x+(Math.random()-.5)*2;z=pl.z+(Math.random()-.5)*2}else{for(let i=0;i<8;i++){x=1+Math.random()*40;z=-16+Math.random()*32;if(Math.hypot(x-b.x,z-b.z)>5.5)break}}spawnRock(x,z,rage?.8:.95);b.rn++;b.spT=rage?.2:.28}
+  if(b.rn>=total){if(!b.endT){b.endT=true;b.t=1.0}else if(b.t<=0){b.endT=false;b.st='idle';b.t=1.5}}}
+ else if(b.st==='quake0'){setP(-.3,2.75,2.75,5);shake=Math.max(shake,.15+.3*(1-b.t/1.15));if(b.t<=0){b.st='quake';b.qph='warn';b.t=.7;b.pulse=0}}
+ else if(b.st==='quake'){
+  const N=rage?4:3;
+  if(b.qph==='warn'){setP(-.3,2.75,2.75,6);shake=Math.max(shake,.2);
+   if(b.t<=0){shake=1.4;b.flash=.9;for(let i=0;i<14;i++)burst(-6+Math.random()*46,-16+Math.random()*32,3,4,.7,Math.random()<.4?1:0);setP(.55,1.1,1.1,30);
+    if((pl.ground||pl.y<.35)&&hit())return true;
+    b.pulse++;if(b.pulse>=N){b.st='tired';b.t=rage?2.2:2.8;b.coreX=b.x+fx*(R+2.6);b.coreZ=b.z+fz*(R+2.6);b.coreS=0;banner('😮‍💨 破壊神が疲れた！ 核を踏め！',1200)}else{b.qph='gap';b.t=.45}}}
+  else if(b.qph==='gap'){if(b.t<=0){b.qph='warn';b.t=.7}}}
+ else if(b.st==='tired'){setP(.62,1.16,1.16,6);if(b.t<=0){b.st='idle';b.t=rage?.9:1.4}}
+ else if(b.st==='hurt'){setP(-.15,2.2,2.2,6);shake=Math.max(shake,.2);if(b.t<=0){b.st='idle';b.t=rage?.6:.9}}
+ // 地震の光（足場全体）
+ const qw=b.st==='quake'&&b.qph==='warn';b.flash=Math.max(0,b.flash-dt*3.5);
+ const op=qw?.12+.3*(1-b.t/.7)+(Math.floor(clock*10)%2?.1:0):b.flash*.8;
+ for(const o of b.qfx){o.material.opacity=op;o.material.color.setHex(!qw&&b.flash>.3?0xffe8b0:0xff7a22)}
+ // 弱点の核
+ if(vuln){b.coreS=Math.min(1,b.coreS+dt*5);b.coreM.visible=true;b.coreM.position.set(b.coreX,1.35+Math.sin(clock*4)*.12,b.coreZ);b.coreM.rotation.y=clock*3;b.coreM.scale.setScalar(4.2*b.coreS)}
+ else{b.coreS=0;b.coreM.visible=false}
+ if(vuln&&b.coreS>.6&&b.inv<=0){const top=1.5;
+  if(Math.hypot(pl.x-b.coreX,pl.z-b.coreZ)<2.0&&pl.vy<0&&oy>=top-.3&&pl.y<=top+.35){
+   damageBoss(1);if(b.st!=='dead'){b.st='hurt';b.t=1.3;b.inv=1.0}
+   pl.y=top+.03;pl.vy=12;pl.ground=false;shake=Math.max(shake,.9);banner('💥 核を踏んだ！ ダメージ！',700)}}
+ // 見た目：脈動する光・浮遊する岩・火の粉
+ const pu=.75+.25*Math.sin(clock*3.2);u.glow.color.setRGB(Math.min(1,pu+.1),(rage?.25:.65)*pu,(rage?.07:.19)*pu);u.crys.color.setRGB(pu,.76*pu,.28*pu);
+ u.orbit.rotation.y+=dt*(rage?.9:.5);for(let i=0;i<u.orbit.children.length;i++){const o=u.orbit.children[i];o.rotation.x+=dt*(1+i*.1);o.position.y=o.userData.y0+Math.sin(clock*1.5+i)*.5}
+ const ep=b.embers.geometry.attributes.position;for(let i=0;i<ep.count;i++){let y=ep.getY(i)+dt*(1.2+(i%5)*.4);if(y>16)y=0;ep.setY(i,y)}ep.needsUpdate=true;
+ // ポーズ反映・歩行アニメ
+ const kk=Math.min(1,dt*b.k);b.lean+=(b.tl-b.lean)*kk;b.arm[0]+=(b.ta[0]-b.arm[0])*kk;b.arm[1]+=(b.ta[1]-b.arm[1])*kk;
+ tor.rotation.z=-b.lean;u.arms[0].rotation.z=b.arm[0];u.arms[1].rotation.z=b.arm[1];
+ const p0=Math.sin(b.walk);b.walk+=mv*dt*1.25;if(mv&&p0*Math.sin(b.walk)<0){shake=Math.max(shake,.18);burst(b.x+(Math.random()-.5)*5,b.z+(Math.random()-.5)*5,4,3,.6,0)}
+ tor.position.y=3.4+Math.sin(b.walk*2)*.12;u.legs[0].position.x=Math.sin(b.walk)*.9;u.legs[1].position.x=-Math.sin(b.walk)*.9;
+ g.position.set(b.x,0,b.z);
+ updateFx(dt);if(updateRocks(dt))return true;
+ if(b.st!=='stuck'&&b.st!=='tired'&&b.st!=='hurt'&&dd<b.r&&pl.y<10&&pl.inv<=0&&hit())return true;
+ return false}
+// ===== マグマドラゴンの演出 =====
+const LAVACR=new T.MeshBasicMaterial({color:0xff5a1c});
+function setupMagma(b){
+ for(let n=0;n<16;n++){const p=platforms[Math.floor(Math.random()*platforms.length)];if(!p)break;const g=new T.Group();g.position.set(p.x0+1+Math.random()*(p.x1-p.x0-2),.11,p.z0+1+Math.random()*(p.z1-p.z0-2));
+  for(let i=0;i<3+(n%2);i++){const a=Math.random()*6.283,len=1.2+Math.random()*2.2,cx=Math.cos(a)*len/2,cz=-Math.sin(a)*len/2;
+   const d=new T.Mesh(B,mm(0x120a0c));d.scale.set(len,.02,.26);d.position.set(cx,0,cz);d.rotation.y=a;g.add(d);
+   const l=new T.Mesh(B,LAVACR);l.scale.set(len*.9,.025,.1);l.position.set(cx,.015,cz);l.rotation.y=a;g.add(l)}
+  lvl.add(g)}
+ const N=46,pos=new Float32Array(N*3);for(let i=0;i<N;i++){pos[i*3]=-8+Math.random()*50;pos[i*3+1]=Math.random()*16;pos[i*3+2]=-18+Math.random()*36}
+ const eg=new T.BufferGeometry();eg.setAttribute('position',new T.BufferAttribute(pos,3));const em=new T.Points(eg,new T.PointsMaterial({color:0xff6a2a,size:.45}));em.frustumCulled=false;lvl.add(em);b.embers=em}
+function animMagma(b,dt){
+ const u=b.g.userData;if(!u.glow)return;const rg=!!b.rage,pu=.75+.25*Math.sin(clock*4);
+ u.glow.color.setRGB(Math.min(1,pu+.1),(rg?.28:.42)*pu,(rg?.06:.13)*pu);
+ for(let i=0;i<u.flames.length;i++){const f=u.flames[i],s=(.8+.45*Math.abs(Math.sin(clock*9+i*1.7)))*(rg?1.35:1);f.scale.set(.5*s,1.1*s,.5*s);f.position.y=f.userData.y0+.3*s}
+ const air=b.y>.5;
+ for(let i=0;i<2;i++){const s=i?1:-1,fl=air?.9+.3*Math.sin(clock*14):(b.st==='idle'?.25+.1*Math.sin(clock*2.2):.4+.15*Math.sin(clock*5));u.wings[i].rotation.x=-s*fl}
+ for(let i=0;i<u.tailSegs.length;i++){u.tailSegs[i].rotation.y=Math.sin(clock*1.8-i*.55)*.2;u.tailSegs[i].rotation.z=Math.sin(clock*1.2-i*.4)*.05}
+ if(b.embers){const ep=b.embers.geometry.attributes.position;for(let i=0;i<ep.count;i++){let y=ep.getY(i)+dt*(1.2+(i%5)*.4);if(y>16)y=0;ep.setY(i,y)}ep.needsUpdate=true}
+ updateFx(dt)}
+// ===== 新しい敵：ジャンプキノコ・タコ =====
+const INKMAT=new T.MeshBasicMaterial({color:0x35124f});
+function inkReset(){inkShots=[];inkT=0;zPools=[];const d=document.getElementById('inkfx');if(d)d.style.opacity=0}
+function groundRing(x,y,z,color,r){const m=new T.Mesh(new T.TorusGeometry(r,.1,8,40),new T.MeshBasicMaterial({color,transparent:true,opacity:.9}));m.rotation.x=Math.PI/2;m.position.set(x,y+.12,z);lvl.add(m);setTimeout(()=>{if(m.parent)m.parent.remove(m)},500)}
+function inkHit(){inkT=2.8;let d=document.getElementById('inkfx');if(!d){d=document.createElement('div');d.id='inkfx';d.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;pointer-events:none;z-index:4;background:radial-gradient(circle at 50% 50%,rgba(20,4,40,.35) 0%,rgba(14,2,28,.93) 70%);opacity:0';document.body.appendChild(d)}d.style.opacity=1;banner('🦑 墨を浴びた！ 視界が真っ暗！',900)}
+function updateInk(dt){
+ for(const s of inkShots){s.life-=dt;s.x+=s.vx*dt;s.z+=s.vz*dt;s.m.position.set(s.x,s.y,s.z);s.m.scale.setScalar(.5+.08*Math.sin(clock*20+s.x));
+  if(Math.hypot(pl.x-s.x,pl.z-s.z)<.7&&Math.abs(s.y-(pl.y+.7))<1){s.life=0;inkHit()}}
+ inkShots=inkShots.filter(s=>{if(s.life<=0){lvl.remove(s.m);return false}return true});
+ if(inkT>0){inkT-=dt;const d=document.getElementById('inkfx');if(d)d.style.opacity=Math.max(0,Math.min(1,inkT/.8))}}
+function octoDrop(e){for(let i=0;i<2;i++)addCrystal(e.x+(i?.5:-.5),e.p.top+.9,e.z,e.p);banner('🐙 クリスタルを落とした！',800)}
+// ===== ゾンビキング =====
+const ARENA_P={x0:-9.5,x1:1e6,z0:-18.5,z1:18.5,top:0,i:-1};
+function makeZombie(king){
+ const g=new T.Group(),inner=new T.Group();g.add(inner);
+ const skinM=new T.MeshLambertMaterial({color:0x7fae6e}),eyeM=new T.MeshBasicMaterial({color:0xd8ff3a}),orbM=new T.MeshBasicMaterial({color:0x7dff5a});
+ const P=(geo,mat,x,y,z,sx,sy,sz,par)=>{const o=new T.Mesh(geo,typeof mat==='number'?mm(mat):mat);o.position.set(x,y,z);o.scale.set(sx,sy,sz);(par||inner).add(o);return o};
+ const legs=[];for(const s of[-1,1]){const l=new T.Group();l.position.set(0,.55,s*.14);inner.add(l);P(B,king?0x3a2a4f:0x3d3d5c,0,-.27,0,.22,.55,.22,l);P(B,0x2a2a2a,.06,-.52,0,.32,.1,.24,l);legs.push(l)}
+ P(B,king?0x5b2a86:0x5a6b4a,0,.9,0,.42,.62,.62);P(B,skinM,.22,.95,0,.03,.34,.34);
+ for(let i=0;i<3;i++)P(B,0x3a3d33,.235,.82+i*.1,0,.02,.03,.3);
+ P(B,0x2b2b2b,0,.62,0,.44,.08,.64);
+ P(B,skinM,0,1.47,0,.4,.4,.4);for(const s of[-1,1])P(B,eyeM,.205,1.5,s*.1,.03,.08,.09);
+ P(B,0x2a1a1a,.205,1.35,0,.03,.06,.22);P(S,0xd68fa6,-.06,1.7,.1,.17,.12,.17);
+ if(!king){P(B,0x3d4a36,-.02,1.7,-.12,.3,.06,.2)}
+ const arms=[];for(const s of[-1,1]){const a=new T.Group();a.position.set(0,1.1,s*.38);inner.add(a);P(B,skinM,0,-.3,0,.14,.62,.14,a);P(B,skinM,0,-.66,0,.16,.14,.18,a);a.rotation.z=1.25;arms.push(a)}
+ let stars=null,gem=null;
+ if(king){
+  P(B,0xffd54a,0,1.72,0,.44,.1,.44);for(let i=0;i<5;i++){const a=i/5*Math.PI*2;P(C,0xffd54a,Math.cos(a)*.17,1.86,Math.sin(a)*.17,.1,.2,.1)}
+  gem=new T.MeshBasicMaterial({color:0x44ff88});P(S,gem,.23,1.75,0,.09,.09,.09);P(S,0xff3b3b,0,1.76,.23,.08,.08,.08);P(S,0x4aa8ff,0,1.76,-.23,.08,.08,.08);
+  P(B,0x7a1f2b,-.3,.85,0,.05,.95,.8);P(B,0xf0e8d8,0,1.17,0,.46,.1,.72);
+  for(const s of[-1,1])P(S,0xffd54a,0,1.15,s*.4,.2,.14,.2);
+  P(B,0x6b4a2a,.35,.95,.4,.06,1.9,.06);P(S,orbM,.35,1.95,.4,.24,.24,.24);P(S,0xe8dcc0,.35,1.78,.4,.14,.14,.14);
+  stars=new T.Group();for(let i=0;i<3;i++){const a=i/3*Math.PI*2,st=new T.Mesh(S,new T.MeshBasicMaterial({color:0xffe14a}));st.scale.setScalar(.14);st.position.set(Math.cos(a)*.5,2.15,Math.sin(a)*.5);stars.add(st)}stars.visible=false;inner.add(stars);
+  inner.scale.setScalar(1.9)}
+ g.userData={inner,legs,arms,skinM,eyeM,orbM,gem,stars};return g}
+function spawnZombie(x,z){
+ const g=makeZombie(false),e={type:'zombie',p:ARENA_P,x,z,y:-1.7,dir:1,st:'rise',t:.8,kick:0,life:0,ph:Math.random()*6,bx:x,rev:0,cd:1,downK:0,fromGround:true,g,armA:1.35};
+ g.position.set(x,-1.7,z);lvl.add(g);enemies.push(e);return e}
+function setupKing(b){
+ b.r=1.4;b.lean=0;b.arm=[.25,.5];b.ta=[.25,.5];b.tl=0;b.k=4;b.walk=0;b.track=true;b.last='';b.sp=[];
+ b.spm=[];for(let i=0;i<5;i++){const m=new T.Mesh(CIRC,new T.MeshBasicMaterial({color:0x58d63a,transparent:true,opacity:.35,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.y=.13;m.scale.setScalar(1.3);m.visible=false;lvl.add(m);b.spm.push(m)}
+ const lane=new T.Mesh(B,new T.MeshBasicMaterial({color:0xff2a2a,transparent:true,opacity:.3,depthWrite:false}));lane.visible=false;lvl.add(lane);b.lane=lane;
+ for(let i=0;i<16;i++){const side=i%2?1:-1,x=-9+(i>>1)*6.5+(Math.random()-.5)*2,z=side*(21.5+Math.random()*1.5),t=new T.Group();
+  t.add(mk(B,0x8a9188,0,.8,0,1.2,1.6,.35),mk(S,0x8a9188,0,1.6,0,1.2,.7,.35));if(i%3===0)t.add(mk(B,0x8a9188,0,2.3,0,.25,1.1,.3),mk(B,0x8a9188,0,2.5,0,.8,.22,.3));
+  t.position.set(x,-.5,z);t.rotation.set(0,side>0?Math.PI:0,(Math.random()-.5)*.25);lvl.add(t)}
+ const N=46,pos=new Float32Array(N*3);for(let i=0;i<N;i++){pos[i*3]=-8+Math.random()*50;pos[i*3+1]=Math.random()*16;pos[i*3+2]=-18+Math.random()*36}
+ const eg=new T.BufferGeometry();eg.setAttribute('position',new T.BufferAttribute(pos,3));const em=new T.Points(eg,new T.PointsMaterial({color:0x7dff6a,size:.45}));em.frustumCulled=false;lvl.add(em);b.embers=em}
+function makePool(sx,sy,sz,x,z,life){
+ const disc=new T.Mesh(CIRC,new T.MeshBasicMaterial({color:0x58d63a,transparent:true,opacity:.2,depthWrite:false}));disc.rotation.x=-Math.PI/2;disc.position.set(x,.13,z);disc.scale.setScalar(2.3);
+ const rg=new T.Mesh(new T.RingGeometry(.9,1,40),new T.MeshBasicMaterial({color:0xc8ff90,transparent:true,opacity:.9,depthWrite:false,side:T.DoubleSide}));rg.position.z=.01;disc.add(rg);lvl.add(disc);
+ const glob=new T.Mesh(S,new T.MeshBasicMaterial({color:0x7dff5a}));glob.scale.setScalar(.6);glob.position.set(sx,sy,sz);lvl.add(glob);
+ zPools.push({disc,glob,x,z,sx,sy,sz,ph:'fly',T:.9,t:.9,life})}
+function updatePools(dt){
+ for(const o of zPools){o.t-=dt;
+  if(o.ph==='fly'){const u=1-Math.max(0,o.t)/o.T;o.glob.position.set(o.sx+(o.x-o.sx)*u,o.sy+(.3-o.sy)*u+Math.sin(u*Math.PI)*2.6,o.sz+(o.z-o.sz)*u);o.disc.material.opacity=.15+.2*u;
+   if(o.t<=0){o.ph='on';o.t=o.life;o.glob.visible=false;burst(o.x,o.z,10,5,.45,3);o.disc.material.opacity=.6}}
+  else if(o.ph==='on'){o.disc.material.opacity=.5+.15*Math.sin(clock*8+o.x);
+   if(Math.hypot(pl.x-o.x,pl.z-o.z)<2.3&&pl.y<.9&&pl.inv<=0&&hit())return true;
+   if(o.t<=0){o.ph='fade';o.t=.5}}
+  else if(o.ph==='fade'){const k=Math.max(0,o.t/.5);o.disc.scale.setScalar(2.3*k);o.disc.material.opacity=.5*k;if(o.t<=0)o.ph='gone'}}
+ zPools=zPools.filter(o=>{if(o.ph==='gone'){lvl.remove(o.disc);lvl.remove(o.glob);return false}return true});return false}
+function kingDead(b,dt){
+ if(b.rew)return false;
+ if(!b.dying){b.dying=true;for(const o of zPools){lvl.remove(o.disc);lvl.remove(o.glob)}zPools=[];b.lane.visible=false;for(const m of b.spm)m.visible=false;b.g.userData.stars.visible=false;banner('👑 ゾンビキングが崩れ落ちる…！',1400)}
+ const k=Math.max(0,b.t/1.4);shake=Math.max(shake,.45);
+ if(Math.random()<.6)burst(b.x+(Math.random()-.5)*3,b.z+(Math.random()-.5)*3,3,6,.7,3);updateFx(dt);
+ b.g.userData.inner.rotation.z=(1-k)*1.5;b.g.position.set(b.x,-(1-k)*1.5,b.z);
+ if(b.t<=0){b.rew=true;lvl.remove(b.g);reward()}
+ return false}
+function stepKing(b,dt,oy){
+ const g=b.g,u=g.userData,dx=pl.x-b.x,dz=pl.z-b.z,dd=Math.hypot(dx,dz)||1,half=b.hp<=Math.ceil(b.max/2),rage=!!b.rage,two=gameMode==='2d';
+ const X0=-8,X1=40,Z0=-17,Z1=17;
+ if(half&&!b.rage){b.rage=true;u.eyeM.color.setHex(0xff3030);u.orbM.color.setHex(0xff5030);banner('🔥 ゾンビキングが怒り狂った！',1300);shake=Math.max(shake,.5)}
+ if(b.track){let d=Math.atan2(-dz,dx)-g.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));g.rotation.y+=d*Math.min(1,dt*3)}
+ const fa=g.rotation.y,fx=Math.cos(fa),fz=-Math.sin(fa);
+ const setP=(l,a0,a1,k)=>{b.tl=l;b.ta[0]=a0;b.ta[1]=a1;b.k=k};
+ const clampK=()=>{b.x=Math.max(X0,Math.min(X1,b.x));if(!two)b.z=Math.max(Z0,Math.min(Z1,b.z))};
+ let mv=0;
+ if(b.st==='idle'){
+  b.track=true;setP(0,.25,.5,3);
+  if(dd>5){mv=rage?3.0:2.1;b.x+=dx/dd*mv*dt;b.z+=dz/dd*mv*dt;clampK()}
+  if(b.t<=0){
+   const zs=enemies.filter(e=>e.type==='zombie'&&e.st!=='squash'),alive=zs.length,corp=zs.filter(e=>e.st==='down').length,r=Math.random();
+   let pick=corp>=2&&r<.45?'rally':alive<3&&r<.7?'summon':(r<.5?'charge':'poison');
+   if(pick==='summon'&&alive>=6)pick='charge';
+   if(pick===b.last&&pick!=='summon')pick=pick==='charge'?'poison':'charge';
+   b.last=pick;
+   if(pick==='summon'){b.st='summon0';b.t=1.0;const N=rage?5:3;b.sp=[];
+    for(let i=0;i<N;i++){const a=Math.random()*6.283,rr=4+Math.random()*4;let x=Math.max(-8,Math.min(40,pl.x+Math.cos(a)*rr)),z=two?0:Math.max(-16,Math.min(16,pl.z+Math.sin(a)*rr));b.sp.push({x,z});b.spm[i].position.set(x,.13,z);b.spm[i].visible=true}
+    banner('🧟 ゾンビを呼び出す！',1000)}
+   else if(pick==='charge'){b.st='charge0';b.t=rage?.8:1.0;banner('⚠️ 突進！ 赤い線から逃げろ！',1000)}
+   else if(pick==='poison'){b.st='poison0';b.t=.9;banner('☠ 毒の沼！ 緑の円から出ろ！',1000)}
+   else{b.st='rally0';b.t=1.0;banner('💀 全員起きろ！',1000)}}}
+ else if(b.st==='summon0'){
+  setP(-.2,2.7,2.7,6);shake=Math.max(shake,.15);for(const m of b.spm)m.material.opacity=.3+.2*Math.sin(clock*14);
+  if(b.t<=0){for(let i=0;i<b.sp.length;i++){spawnZombie(b.sp[i].x,b.sp[i].z);burst(b.sp[i].x,b.sp[i].z,10,5,.5,3);burst(b.sp[i].x,b.sp[i].z,6,3,.9,0);b.spm[i].visible=false}b.st='idle';b.t=rage?.9:1.5;shake=Math.max(shake,.5)}}
+ else if(b.st==='charge0'){
+  setP(.35,-.9,-.9,6);const lock=b.t<.35;if(lock)b.track=false;
+  const len=34;b.lane.visible=true;b.lane.scale.set(len,.04,3.4);b.lane.position.set(b.x+fx*len/2,.14,b.z+fz*len/2);b.lane.rotation.y=fa;b.lane.material.opacity=lock?(Math.floor(clock*16)%2?.6:.35):.28;
+  if(b.t<=0){b.st='charge';b.cx=fx;b.cz=fz;b.dist=0;b.lane.visible=false}}
+ else if(b.st==='charge'){
+  setP(.4,-1.0,-1.0,10);const sp=rage?19:16;b.x+=b.cx*sp*dt;b.z+=b.cz*sp*dt;b.dist+=sp*dt;mv=sp*.8;shake=Math.max(shake,.3);
+  if(Math.random()<.5)burst(b.x,b.z,2,2,.5,0);
+  if(Math.hypot(pl.x-b.x,pl.z-b.z)<2.0&&pl.y<3.4&&pl.inv<=0&&hit())return true;
+  if(b.x<X0||b.x>X1||(!two&&(b.z<Z0||b.z>Z1))||b.dist>40){clampK();b.st='dizzy';b.t=rage?2.2:2.8;shake=1.4;burst(b.x,b.z,20,9,.6,1);burst(b.x,b.z,12,6,1,0);banner('💫 ゾンビキングが目を回した！ 頭を踏め！',1300)}}
+ else if(b.st==='dizzy'){setP(.6,.9,.9,6);if(b.t<=0){b.st='idle';b.t=1.0}}
+ else if(b.st==='poison0'){
+  setP(-.3,-.6,-.6,6);
+  if(b.t<=0){const N=rage?5:3;for(let i=0;i<N;i++){let x=i?pl.x+(Math.random()-.5)*10:pl.x,z=two?0:(i?pl.z+(Math.random()-.5)*10:pl.z);x=Math.max(-8,Math.min(40,x));z=Math.max(-16,Math.min(16,z));makePool(b.x+fx*1.2,3.0,b.z+fz*1.2,x,z,rage?5.5:4.5)}b.st='poison';b.t=1.3}}
+ else if(b.st==='poison'){setP(.2,1.2,1.2,6);if(b.t<=0){b.st='idle';b.t=rage?1.0:1.6}}
+ else if(b.st==='rally0'){
+  setP(-.2,2.7,2.7,6);shake=Math.max(shake,.2);
+  if(b.t<=0){let n=0;for(const e of enemies)if(e.type==='zombie'&&e.st==='down'){e.st='rise';e.t=.8;e.fromGround=false;e.rev=1;e.g.userData.skinM.color.setHex(0x5e8a56);e.g.userData.eyeM.color.setHex(0xff3030);burst(e.x,e.z,8,4,.4,3);n++}
+   for(const r of[3,6,9])groundRing(b.x,0,b.z,0x7dff5a,r);shake=.6;banner(n?'💀 '+n+'体が蘇った！':'💀 …誰も倒れていない',900);b.st='idle';b.t=rage?.9:1.4}}
+ else if(b.st==='hurt'){setP(-.2,2.2,2.2,6);if(b.t<=0){b.st='idle';b.t=rage?.6:.9}}
+ // 王冠への踏みつけ（目を回している間だけ）
+ const dizzy=b.st==='dizzy';
+ g.scale.x+=((dizzy?1.15:1)-g.scale.x)*Math.min(1,dt*10);g.scale.y+=((dizzy?.5:1)-g.scale.y)*Math.min(1,dt*10);g.scale.z=g.scale.x;
+ if(dizzy&&b.inv<=0&&g.scale.y<.65){const top=3.7*g.scale.y;
+  if(Math.hypot(pl.x-b.x,pl.z-b.z)<1.9&&pl.vy<0&&oy>=top-.3&&pl.y<=top+.35){
+   damageBoss(1);if(b.st!=='dead'){b.st='hurt';b.t=1.2;b.inv=1.0}
+   pl.y=top+.03;pl.vy=12;pl.ground=false;shake=Math.max(shake,.9);banner('👑 王冠にヒット！',700);burst(b.x,b.z,12,7,.5,3)}}
+ // ポーズ・歩行アニメ
+ const kk=Math.min(1,dt*b.k);b.lean+=(b.tl-b.lean)*kk;b.arm[0]+=(b.ta[0]-b.arm[0])*kk;b.arm[1]+=(b.ta[1]-b.arm[1])*kk;
+ u.inner.rotation.z=-b.lean;u.arms[0].rotation.z=b.arm[0];u.arms[1].rotation.z=b.arm[1];
+ const p0=Math.sin(b.walk);b.walk+=mv*dt*2.2;if(mv&&p0*Math.sin(b.walk)<0)shake=Math.max(shake,.12);
+ u.legs[0].rotation.z=Math.sin(b.walk)*.6;u.legs[1].rotation.z=-Math.sin(b.walk)*.6;
+ u.stars.visible=dizzy;u.stars.rotation.y+=dt*4;
+ const pu=.8+.2*Math.sin(clock*4);u.orbM.color.setRGB(b.rage?1:.49*pu,b.rage?.3*pu:1*pu,b.rage?.2*pu:.35*pu);
+ for(const e of b.embers?[b.embers]:[]){const ep=e.geometry.attributes.position;for(let i=0;i<ep.count;i++){let y=ep.getY(i)+dt*(1.2+(i%5)*.4);if(y>16)y=0;ep.setY(i,y)}ep.needsUpdate=true}
+ g.position.set(b.x,0,b.z);
+ updateFx(dt);if(updatePools(dt))return true;
+ if(b.st!=='dizzy'&&b.st!=='hurt'&&b.st!=='charge'&&dd<1.5&&pl.y<3.4&&pl.inv<=0&&hit())return true;
+ return false}
+
+function stepBoss(dt,oy){const b=boss,g=b.g;if(b.frozen>0){b.frozen=Math.max(0,b.frozen-dt);if(b.glitchFx){b.glitchFx.rotation.y+=dt*9;b.glitchFx.position.y=Math.sin(clock*25)*.15}if(b.frozen<=0&&b.glitchFx){g.remove(b.glitchFx);b.glitchFx=null}return false}b.t-=dt;b.inv=Math.max(0,b.inv-dt);
+for(const h of bossHazards){
+  h.t-=dt;
+  if(h.phase==='idle'&&h.t<=0){
+    // 噴射のたびに場所をランダム変更。プレイヤーのすぐ足元は避けて、暗くしてから警告する。
+    let spot=null;
+    for(let tries=0;tries<12;tries++){
+      const p=platforms[Math.floor(Math.random()*platforms.length)];
+      if(!p) continue;
+      const x=p.x0+2.2+Math.random()*Math.max(.1,p.x1-p.x0-4.4);
+      const z=p.z0+2.0+Math.random()*Math.max(.1,p.z1-p.z0-4.0);
+      if(Math.hypot(pl.x-x,pl.z-z)>5.2){spot={x,z};break}
+    }
+    if(spot){h.x=spot.x;h.z=spot.z;h.g.position.set(h.x,0,h.z)}
+    h.phase='warn';h.t=1.15;h.warning.material.color.setHex(0x100e18);h.glow.material.color.setHex(0x321326);banner('⚠️ 地面が暗い！マグマ噴射に注意！',850)
+  }
+  else if(h.phase==='warn'&&h.t<=0){h.phase='erupt';h.t=1.05;h.jet.visible=true;h.warning.material.color.setHex(0x35151a);h.glow.material.color.setHex(0xff4a18)}
+  else if(h.phase==='erupt'&&h.t<=0){h.phase='idle';h.t=2.8+Math.random()*3;h.jet.visible=false;h.warning.material.color.setHex(0x211b2b);h.glow.material.color.setHex(0xff6a22)}
+  if(h.phase==='erupt'){h.jet.scale.y=.8+Math.abs(Math.sin(performance.now()*.018))*.6;h.jet.rotation.y+=dt*1.8}
+  const dxh=pl.x-h.x,dzh=pl.z-h.z;
+  if(h.phase==='erupt'&&Math.abs(dxh)<h.r&&Math.abs(dzh)<1.35&&pl.y<4.5&&pl.inv<=0){if(hit())return true}
+}
+// ボスステージでは、少し時間がたつと足場のどこかにキノコが出現！
+bossMushT-=dt;
+if(bossMushT<=0&&platforms.length){const p=platforms[Math.floor(Math.random()*platforms.length)];const x=p.x0+1.2+Math.random()*Math.max(.1,p.x1-p.x0-2.4);const z=p.z0+1.2+Math.random()*Math.max(.1,p.z1-p.z0-2.4);const giant=Math.random()<.045;addMushroom(x,p.top+.9,z,giant);bossMushT=16+Math.random()*10;banner(giant?'✨ 巨大エネルギーコア出現！':'🔷 パワーオーブ出現！',1000)}
+for(const m of mushrooms){m.ph+=dt;m.g.position.y=m.by+Math.sin(m.ph*3)*.1;m.g.rotation.y+=dt*1.5;if(!m.got&&Math.abs(pl.x-m.x)<(m.giant?1.7:1)&&Math.abs(pl.z-m.z)<(m.giant?1.7:1)&&Math.abs(pl.y+.7-m.by)<(m.giant?1.8:1.3)){m.got=true;lvl.remove(m.g);if(m.giant){pl.giantTimer=10;pl.big=false;pl.inv=0;bonus+=500;banner('✨ 巨大化！10秒間パワーアップ！',1500)}else{pl.big=true;bonus+=200;banner('🔷 パワーオーブGET！',900)}}}
+mushrooms=mushrooms.filter(m=>!m.got);
+for(const s of shots){s.x+=s.vx*dt;s.z+=s.vz*dt;s.life-=dt;s.m.position.set(s.x,s.y,s.z);if((pl.x-s.x)**2+(pl.z-s.z)**2<.5&&pl.y<s.y+.4&&pl.y+1.4>s.y-.4){s.life=0;if(hit())return true}}
+shots=shots.filter(s=>{if(s.life<=0){lvl.remove(s.m);return false}return true});
+for(const r of rings){r.r+=9*dt;r.m.scale.set(r.r,r.r,1);if(!r.hit&&Math.abs(Math.hypot(pl.x-r.x,pl.z-r.z)-r.r)<.8&&pl.y<.8){r.hit=true;if(hit())return true}}
+rings=rings.filter(r=>{if(r.r>12){lvl.remove(r.m);return false}return true});
+const dx=pl.x-b.x,dz=pl.z-b.z,half=b.hp<=Math.ceil(b.max/2);
+if(b.st==='dead'&&b.kind==='rock')return rockDead(b,dt);
+if(b.st==='dead'&&b.kind==='zombie')return kingDead(b,dt);
+if(b.st==='dead'){if(Math.random()<.5)burst(b.x+(Math.random()-.5)*5,b.z+(Math.random()-.5)*5,3,6,.6,2);updateFx(dt);const k=Math.max(0,b.t/1.4);g.scale.set(k,k,k);g.rotation.y+=dt*9;if(b.t<=0&&!b.rew){b.rew=true;lvl.remove(g);reward()}return false}
+if(b.kind==='rock')return stepRock(b,dt,oy);
+if(b.kind==='zombie')return stepKing(b,dt,oy);
+g.rotation.y=Math.atan2(-dz,dx);
+if(half&&!b.rage){b.rage=true;g.userData.bm.color.set(0xff8a3d);banner('ボスが怒った！',1200)}
+if(b.st==='idle'){g.scale.set(1,1,1);if(b.t<=0){const r=Math.random();b.st=half&&r<.25?'summon':r<.6?'hop0':'shoot0';b.t=.6}}
+else if(b.st==='hop0'){g.scale.set(1.15,.75,1.15);if(b.t<=0){b.st='hop';b.t=1.1;b.sx=b.x;b.sz=b.z;b.tx=Math.max(2,Math.min(40,pl.x));b.tz=Math.max(-14,Math.min(14,pl.z))}}
+else if(b.st==='hop'){const k=1-Math.max(0,b.t)/1.1;g.scale.set(1,1,1);b.x=b.sx+(b.tx-b.sx)*k;b.z=b.sz+(b.tz-b.sz)*k;b.y=Math.sin(k*Math.PI)*6;
+if(b.t<=0){b.y=0;shake=Math.max(shake,.9);burst(b.x,b.z,16,9,.5,2);burst(b.x,b.z,12,6,1.0,0);b.st='dizzy';b.t=half?1.8:2.4;const m=new T.Mesh(new T.TorusGeometry(1,.12,6,40),mm(0xffe066));m.rotation.x=Math.PI/2;m.position.set(b.x,.15,b.z);lvl.add(m);rings.push({m,x:b.x,z:b.z,r:.5})}}
+else if(b.st==='shoot0'){g.scale.set(1.1,.9,1.1);if(b.t<=0){const n=half?5:3,a0=Math.atan2(dz,dx);burst(b.x+Math.cos(a0)*3,b.z+Math.sin(a0)*3,8,6,.4,2);shake=Math.max(shake,.3);for(let i=0;i<n;i++){const a=a0+(i-(n-1)/2)*.3,m=mk(S,0xffb02e,0,0,0,.8,.8,.8);lvl.add(m);shots.push({m,x:b.x+Math.cos(a)*2.6,y:.7,z:b.z+Math.sin(a)*2.6,vx:Math.cos(a)*8,vz:Math.sin(a)*8,life:3})}b.st='idle';b.t=half?.9:1.4}}
+else if(b.st==='summon'){g.scale.set(1.1,.9,1.1);if(b.t<=0){if(enemies.filter(e=>e.st==='walk').length<4){const p=platforms.find(q=>b.x>=q.x0&&b.x<=q.x1&&b.z>=q.z0&&b.z<=q.z1)||platforms[0];for(const o of[-3,3])mkEnemy('goomba',p,Math.max(p.x0+1,Math.min(p.x1-1,b.x+o)),Math.max(p.z0+1,Math.min(p.z1-1,b.z)))}b.st='idle';b.t=1}}
+else if(b.st==='dizzy'){g.scale.set(1.2,.35,1.2);if(b.t<=0){b.st='idle';b.t=.8}}
+else if(b.st==='hurt'){g.scale.set(1,1,1);if(b.t<=0){b.st='idle';b.t=.6}}
+g.position.set(b.x,b.y,b.z);animMagma(b,dt);
+const top=b.y+3.8*g.scale.y;
+const nearHead=Math.hypot(dx,dz)<3.1;
+const stomp=pl.vy<0&&oy>=top-.25&&pl.y<=top+.35;
+if(nearHead&&stomp&&b.st!=='dead'&&b.inv<=0){
+  // ボスの頭に乗ったら、目を回していなくても攻撃できる！
+  pl.y=top+.03;pl.vy=12;pl.ground=false;b.hp--;b.inv=1.0;bonus+=300;bossBar();
+  banner('💥 頭を踏んだ！ ダメージ！',650);burst(b.x+2,b.z,12,7,.45,2);shake=Math.max(shake,.5);
+  if(b.hp<=0){b.st='dead';b.t=1.4;shots.forEach(q=>lvl.remove(q.m));shots=[];rings.forEach(q=>lvl.remove(q.m));rings=[];enemies.forEach(q=>lvl.remove(q.g));enemies=[]}
+  else{b.st='hurt';b.t=.8}
+}else if(nearHead&&pl.y<top&&pl.y+1.4>b.y&&b.st!=='dizzy'&&b.st!=='hurt'&&b.st!=='dead'){if(hit())return true}
+return false}
+function stepEnemies(dt,oy){updateInk(dt);for(const e of enemies){const p=e.p,g=e.g;if(e.frozen>0){e.frozen=Math.max(0,e.frozen-dt);if(e.glitchFx){e.glitchFx.rotation.y+=dt*9;e.glitchFx.position.y=Math.sin(clock*25)*.15}if(e.frozen<=0&&e.glitchFx){g.remove(e.glitchFx);e.glitchFx=null}continue}
+if(e.st==='squash'){e.t-=dt;continue}
+if(e.type==='bar'){e.ph+=dt*1.8*e.dir;g.rotation.y=e.ph;const rx=pl.x-e.x,rz=pl.z-e.z,c=Math.cos(e.ph),n2=Math.sin(e.ph),t=rx*c-rz*n2,pp=Math.abs(-rx*n2-rz*c);if(Math.abs(t)<1.7&&pp<.5&&pl.y<p.top+.95){if(hit())return true}continue}
+if(e.type==='rock'){const hy=p.top+.7,hi=p.top+4.2;
+if(e.st==='idle'){if(Math.abs(pl.x-e.x)<2.4&&Math.abs(pl.z-e.z)<1.8&&pl.y<p.top+3){e.st='warn';e.t=.45}}
+else if(e.st==='warn'){e.t-=dt;if(e.t<=0){e.st='drop';e.vy=0}}
+else if(e.st==='drop'){e.vy+=40*dt;e.y-=e.vy*dt;if(e.y<=hy){e.y=hy;e.st='wait';e.t=.8}}
+else if(e.st==='wait'){e.t-=dt;if(e.t<=0)e.st='rise'}
+else{e.y+=2.5*dt;if(e.y>=hi){e.y=hi;e.st='idle'}}
+g.position.set(e.x+(e.st==='warn'?Math.sin(clock*60)*.06:0),e.y,e.z);
+if(Math.abs(pl.x-e.x)<1.0&&Math.abs(pl.z-e.z)<1.0&&pl.y<e.y+.7&&pl.y+1.4>e.y-.7){if(hit())return true}continue}
+if(e.type==='spike'){if(Math.abs(pl.x-e.x)<.95&&Math.abs(pl.z-e.z)<1.35&&pl.y<p.top+.5){if(hit())return true}continue}
+if(e.type==='zombie'){
+ const u=g.userData,dx=pl.x-e.x,dz=pl.z-e.z,d=Math.hypot(dx,dz)||1;
+ if(e.st==='rise'){e.t-=dt;const k=1-Math.max(0,e.t)/.8;if(e.fromGround)e.y=-1.7*(1-k);else e.downK=1-k;if(e.t<=0){e.st='walk';e.y=0;e.downK=0;e.fromGround=false;e.cd=.6}}
+ else if(e.st==='down'){e.t-=dt;e.downK=Math.min(1,e.downK+dt*7);if(e.t<=0){e.st='rise';e.t=.8;e.rev=1;e.fromGround=false;u.skinM.color.setHex(0x5e8a56);u.eyeM.color.setHex(0xff3030);burst(e.x,e.z,8,4,.4,3)}}
+ else if(e.st==='walk'){
+  e.cd-=dt;const sp=e.rev?2.4:1.5;if(d>1.4){e.x+=dx/d*sp*dt;e.z+=dz/d*sp*dt}
+  for(const o of enemies)if(o!==e&&o.type==='zombie'&&o.st!=='down'&&o.st!=='rise'){const ox=e.x-o.x,oz=e.z-o.z,od=Math.hypot(ox,oz);if(od<.9&&od>.01){e.x+=ox/od*dt*1.5;e.z+=oz/od*dt*1.5}}
+  e.x=Math.max(-9.5,Math.min(41.5,e.x));e.z=Math.max(-18.5,Math.min(18.5,e.z));e.ph+=dt*sp*5;
+  u.legs[0].rotation.z=Math.sin(e.ph)*.6;u.legs[1].rotation.z=-Math.sin(e.ph)*.6;
+  if(d<2.2&&e.cd<=0&&Math.abs(pl.y-e.y)<2){e.st='swipe';e.t=.45}}
+ else if(e.st==='swipe'){
+  e.t-=dt;
+  if(e.t<=0){if(d<2.3&&pl.y<e.y+1.4&&pl.inv<=0&&hit())return true;e.st='walk';e.cd=1.3;e.x+=dx/d*.5;e.z+=dz/d*.5}}
+ if(e.st!=='down'&&!(e.st==='rise'&&!e.fromGround))g.rotation.y=Math.atan2(-dz,dx);
+ const tgt=e.st==='swipe'?(e.t>.12?2.8:.5):1.35+Math.sin(e.ph)*.1;e.armA+=(tgt-e.armA)*Math.min(1,dt*14);u.arms[0].rotation.z=u.arms[1].rotation.z=e.armA;
+ if(e.st==='swipe')u.eyeM.color.setHex(Math.floor(clock*20)%2?0xffffff:(e.rev?0xff3030:0xd8ff3a));else if(e.st==='walk')u.eyeM.color.setHex(e.rev?0xff3030:0xd8ff3a);
+ g.rotation.z=e.downK*Math.PI/2;g.position.set(e.x,e.y+e.downK*.25,e.z);
+ if(e.st==='walk'||e.st==='swipe'){const top=e.y+1.75;
+  if((pl.x-e.x)**2+(pl.z-e.z)**2<.6&&pl.y<top&&pl.y+1.4>e.y){const stomp=pl.vy<0&&oy>=top-.4;
+   if(stomp){pl.vy=11;pl.ground=false;
+    if(e.rev){kill(300);e.st='squash';e.t=.35;g.rotation.z=0;g.scale.set(1,.2,1);burst(e.x,e.z,8,4,.4,3)}
+    else{kill(200);e.st='down';e.t=3.0;e.downK=0;u.skinM.color.setHex(0x6b7a63);u.eyeM.color.setHex(0x2a2a2a)}}
+   else{if(hit())return true}}}
+ continue}
+if(e.type==='mush'){
+ e.t-=dt;const dx=pl.x-e.x,dz=pl.z-e.z;g.rotation.y=Math.atan2(-dz,dx);
+ if(e.st==='walk'){e.y=p.top;g.scale.x+=(1-g.scale.x)*Math.min(1,dt*10);g.scale.y+=(1-g.scale.y)*Math.min(1,dt*10);g.scale.z=g.scale.x;if(e.t<=0){e.st='charge';e.t=.45}}
+ else if(e.st==='charge'){const k=1-Math.max(0,e.t)/.45;g.scale.set(1+.18*k,1-.28*k,1+.18*k);if(e.t<=0){e.st='jump';e.vy=12.5;g.scale.set(.9,1.15,.9)}}
+ else if(e.st==='jump'){e.vy-=30*dt;e.y+=e.vy*dt;
+  const d=Math.hypot(dx,dz)||1;if(d<10){e.x+=dx/d*1.8*dt;e.z+=dz/d*1.8*dt;e.x=Math.max(p.x0+.8,Math.min(p.x1-.8,e.x));e.z=Math.max(p.z0+.8,Math.min(p.z1-.8,e.z))}
+  if(e.y<=p.top&&e.vy<0){e.y=p.top;e.st='walk';e.t=1.2;g.scale.set(1.3,.75,1.3);groundRing(e.x,p.top,e.z,0xffb347,2.2);
+   if(Math.hypot(pl.x-e.x,pl.z-e.z)<2.2&&pl.y<p.top+.6){if(hit())return true}}}
+ g.position.set(e.x,e.y,e.z);
+ const top=e.y+1.4;
+ if((pl.x-e.x)**2+(pl.z-e.z)**2<.95&&pl.y<top&&pl.y+1.4>e.y){const stomp=pl.vy<0&&oy>=top-.45&&e.st!=='jump';
+  if(stomp){pl.vy=15;pl.ground=false;kill(300);e.st='squash';e.t=.35;g.scale.set(1,.2,1)}else{if(hit())return true}}
+ continue}
+if(e.type==='octo'){
+ const dx=pl.x-e.x,dz=pl.z-e.z,d=Math.hypot(dx,dz);g.rotation.y=Math.atan2(-dz,dx);
+ for(let i=0;i<e.tent.length;i++)e.tent[i].rotation.z=Math.sin(clock*3+i*.8)*.14+(e.st==='aim'?.35:0);
+ e.eyeM.color.setHex(e.st==='aim'&&Math.floor(clock*16)%2?0xff3030:0xd8ff3a);
+ e.y=p.top;
+ if(e.st==='walk'){g.scale.set(1,1+Math.sin(clock*2.2+e.ph)*.03,1);
+  if(d<11&&Math.abs(pl.y-p.top)<4){e.t-=dt;if(e.t<=0){e.st='aim';e.t=.7}}else e.t=Math.max(e.t,.8)}
+ else if(e.st==='aim'){const k=1-Math.max(0,e.t)/.7;g.scale.set(1+.2*k,1+.2*k,1+.2*k);e.t-=dt;
+  if(e.t<=0){e.st='walk';e.t=2.4;g.scale.set(1,1,1);
+   const base=Math.atan2(dz,dx),two=gameMode==='2d',offs=two?[0,0,0]:[-.3,0,.3];
+   for(let i=0;i<3;i++){const a=base+offs[i],y=e.y+(two?.5+i*.45:1.0),m=new T.Mesh(S,INKMAT);m.scale.setScalar(.5);m.position.set(e.x+Math.cos(a)*.9,y,e.z+Math.sin(a)*.9);lvl.add(m);inkShots.push({m,x:m.position.x,y,z:m.position.z,vx:Math.cos(a)*6.5,vz:Math.sin(a)*6.5,life:2.6})}}}
+ g.position.set(e.x,e.y,e.z);
+ const top=e.y+1.7;
+ if((pl.x-e.x)**2+(pl.z-e.z)**2<1.3&&pl.y<top&&pl.y+1.4>e.y){const stomp=pl.vy<0&&oy>=top-.45;
+  if(stomp){pl.vy=11;pl.ground=false;kill(500);e.st='squash';e.t=.35;g.scale.set(1,.2,1);octoDrop(e)}else{if(hit())return true}}
+ continue}
+if(e.kick>0)e.kick-=dt;
+if(e.type==='bird'){e.ph+=dt*2.2;e.x=e.bx+Math.sin(e.ph*.8)*1.5;e.z=Math.cos(e.ph*.6)*2.2;e.y=p.top+1.7+Math.sin(e.ph)*.8;e.wl.rotation.x=Math.sin(clock*18)*.7;e.wr.rotation.x=-e.wl.rotation.x}
+else if(e.st!=='shell'){const sl=e.st==='slide';e.x+=e.dir*(sl?9:e.type==='koopa'?1.1:1.4)*dt;
+if(e.x<p.x0+.5){e.x=p.x0+.5;e.dir=1}else if(e.x>p.x1-.5){e.x=p.x1-.5;e.dir=-1}
+if(e.type==='goomba')e.z+=Math.sign(pl.z-e.z)*(Math.abs(pl.z-e.z)>.3?.9:0)*dt;
+e.z=Math.max(p.z0+.5,Math.min(p.z1-.5,e.z));
+if(sl){e.life-=dt;e.b.rotation.z-=e.dir*dt*16;if(e.life<=0){e.st='squash';e.t=0}
+for(const o of enemies)if(o!==e&&o.p===p&&o.st==='walk'&&Math.abs(o.x-e.x)<1&&Math.abs(o.z-e.z)<1){o.st='squash';o.t=.3;o.g.scale.y=.2;kill(200)}}
+else g.rotation.y=e.dir>0?0:Math.PI}
+if(e.type==='koopa'){e.w.visible=e.st==='walk';e.b.visible=e.st!=='walk'}
+g.position.set(e.x,e.y,e.z);
+const bot=e.type==='bird'?e.y-.4:e.y,h=e.type==='bird'?.8:e.type==='koopa'?(e.st==='walk'?1:.9):.85,top=bot+h;
+if((pl.x-e.x)**2+(pl.z-e.z)**2<.8&&pl.y<top&&pl.y+1.4>bot){const stomp=pl.vy<0&&oy>=top-.4;
+if(e.type==='koopa'&&e.st==='shell'){if(e.kick>0)continue;e.st='slide';e.dir=pl.x<e.x?1:-1;e.kick=.3;e.life=5;if(stomp)pl.vy=9;continue}
+if(e.kick>0)continue;
+if(stomp){pl.vy=11;pl.ground=false;kill(200);if(e.type==='koopa'){e.st='shell';e.kick=.2}else{e.st='squash';e.t=.35;g.scale.y=.2}}
+else{if(hit())return true}}}
+return false}
+function updateNitaBear(dt){
+ const b=nitaBear;if(!b||!b.g||!b.g.parent||b.g.parent!==lvl)return;
+ b.inv=Math.max(0,b.inv-dt);b.attackT=Math.max(0,b.attackT-dt);b.phase+=dt*8;
+ // Find living enemies and Shy Ghosts. Falling rocks, spikes and rotating bars are never targets.
+ const targetAlive=t=>!!t&&(t.isBoss?(boss===t&&t.st!=='dead'):(t.isShyGhost?ghosts.includes(t):(enemies.includes(t)&&t.st!=='squash'&&!['rock','spike','bar'].includes(t.type))));
+ if(!targetAlive(b.target)){
+  const enemyTargets=enemies.filter(e=>e.st!=='squash'&&!['rock','spike','bar'].includes(e.type)&&e.p&&Math.abs(e.p.i-(pl.pi||0))<=3);
+  const ghostTargets=ghosts.filter(h=>Math.abs(h.hi-(pl.pi||0))<=3);
+  const bossTargets=boss&&boss.st!=='dead'?[Object.assign(boss,{isBoss:true})]:[];
+  b.target=[...enemyTargets,...ghostTargets,...bossTargets].sort((a,c)=>Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z))[0]||null;
+ }
+ let tx=pl.x-1.35,tz=pl.z;
+ if(b.target){const d=Math.hypot(b.target.x-b.x,b.target.z-b.z);if(d<9){tx=b.target.x;tz=b.target.z;if(d<1.25&&b.attackT<=0&&b.ground){b.vy=8.8;b.ground=false;b.attackT=1.05;b.attackTarget=b.target;banner(b.target.isShyGhost?'🐻 クマがシャイゴーストへジャンプ攻撃！':'🐻 クマがジャンプ攻撃！',450)}}else b.target=null}
+ const dx=tx-b.x,dz=tz-b.z,dist=Math.hypot(dx,dz);if(dist>.55){const sp=b.target?3.7:4.8;b.x+=dx/dist*Math.min(dist,sp*dt);b.z+=dz/dist*Math.min(dist,sp*dt)}
+ // Keep Nita's bear from falling into platform gaps: when the player is safely grounded,
+ // teleport the bear beside them if its next position has no supporting platform.
+ const bearHasFloor=platforms.some(p=>b.x>p.x0-.12&&b.x<p.x1+.12&&b.z>p.z0-.12&&b.z<p.z1+.12&&p.top<=b.y+.8&&p.top>=b.y-1.8)
+  ||walls.some(w=>b.x>w.x0-.12&&b.x<w.x1+.12&&b.z>w.z0-.12&&b.z<w.z1+.12&&w.top<=b.y+.8&&w.top>=b.y-1.8);
+ const playerHasFloor=pl.ground&&platforms.some(p=>pl.x>p.x0-.25&&pl.x<p.x1+.25&&pl.z>p.z0-.25&&pl.z<p.z1+.25&&Math.abs(pl.y-p.top)<.3);
+ if(!bearHasFloor&&playerHasFloor&&(b.ground||b.y<pl.y-2.5)){
+  b.x=pl.x-1.25;b.z=pl.z;b.y=pl.y;b.vy=0;b.ground=true;b.attackTarget=null;b.target=null;
+  // If the player is near a platform edge, place the bear a little farther inward.
+  let safe=platforms.find(p=>b.x>p.x0+.15&&b.x<p.x1-.15&&b.z>p.z0+.15&&b.z<p.z1-.15&&Math.abs(p.top-pl.y)<.35);
+  if(!safe){b.x=pl.x+1.25;safe=platforms.find(p=>b.x>p.x0+.15&&b.x<p.x1-.15&&b.z>p.z0+.15&&b.z<p.z1-.15&&Math.abs(p.top-pl.y)<.35)}
+  if(!safe){b.x=pl.x;b.z=pl.z;}
+  b.y=pl.y;banner('🐻 クマが穴をワープで回避！',500);
+ }
+ const oldY=b.y;b.vy-=23*dt;b.y+=b.vy*dt;
+ let floor=null;for(const p of platforms){if(b.x>p.x0-.25&&b.x<p.x1+.25&&b.z>p.z0-.25&&b.z<p.z1+.25&&p.top<=oldY+.15&&p.top>=b.y-.25&&(!floor||p.top>floor.top))floor=p}
+ if(floor&&b.vy<=0){b.y=floor.top;b.vy=0;b.ground=true}else b.ground=false;
+ // On landing, the bear attacks its target with a jump. Shy Ghosts can be defeated too; hazards remain immune.
+ if(b.attackTarget&&b.vy<=0&&b.ground){const e=b.attackTarget;b.attackTarget=null;if(e.isBoss&&boss===e&&e.st!=='dead'&&Math.hypot(e.x-b.x,e.z-b.z)<3.2+(e.r||0)){damageBoss(1);b.target=null;banner('🐻💥 クマがボスにドッスン攻撃！',700)}else if(e.isShyGhost&&ghosts.includes(e)&&Math.hypot(e.x-b.x,e.z-b.z)<2.5){lvl.remove(e.g);ghosts=ghosts.filter(q=>q!==e);b.target=null;bonus+=250;kill(250);banner('🐻 シャイゴーストを撃退！',650)}else if(enemies.includes(e)&&e.st!=='squash'&&!['rock','spike','bar'].includes(e.type)&&Math.hypot(e.x-b.x,e.z-b.z)<2.2){hurtEnemy(e,300);b.target=null;banner('🐻 ドッスン！ 敵を攻撃！',500)}}
+ // Enemy contact costs one of the bear's four HP; it never fights the falling rock.
+ for(const e of enemies){if(e.st==='squash'||['rock','spike','bar'].includes(e.type))continue;if(Math.hypot(e.x-b.x,e.z-b.z)<.8&&Math.abs((e.y||0)-b.y)<1.4&&b.inv<=0){b.hp--;b.inv=.8;if(b.hp<=0){lvl.remove(b.g);nitaBear=null;banner('🐻 クマが帰ってしまった…',900);return}banner('🐻 クマHP '+b.hp+'/4',650);break}}
+ b.g.position.set(b.x,b.y+Math.max(0,Math.sin(b.phase))*.035,b.z);if(b.hpFill){b.hpFill.scale.x=Math.max(.001,b.hp/b.maxHp);b.hpFill.position.x=-.5*(1-b.hp/b.maxHp);b.hpFill.material=mm(b.hp<=1?0xff3434:b.hp<=2?0xffc928:0x35ed59)}if(dist>.05)b.g.rotation.y=Math.atan2(-dz,dx);b.g.scale.y=b.ground?1:1+Math.max(0,b.vy)*.025;
+}
+function update(dt){if(ended||shopOpen||busy)return;elapsed+=dt;autoPlatformCooldown=Math.max(0,autoPlatformCooldown-dt);for(const ap of [...autoPlatforms]){ap.life-=dt;if(ap.life<=0){if(ap.g.parent)lvl.remove(ap.g);platforms=platforms.filter(q=>q!==ap.p);autoPlatforms=autoPlatforms.filter(q=>q!==ap)}}kickT=Math.max(0,kickT-dt);pl.inv=Math.max(0,(pl.inv||0)-dt);pl.stealth=Math.max(0,(pl.stealth||0)-dt);pl.gliding=Math.max(0,(pl.gliding||0)-dt);pl.giantTimer=Math.max(0,(pl.giantTimer||0)-dt);wallTimer=Math.max(0,wallTimer-dt);if(pl.gliding>0&&pl.vy< -2.2)pl.vy=-2.2;
+let ix,iz,mag=1;if(gameMode==='2d'){ix=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0);iz=0;if(joy.m>0){ix=joy.fz;mag=joy.m}}else{ix=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0);iz=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0);if(joy.m>0){ix=joy.fx;iz=joy.fz;mag=joy.m}}const n=Math.hypot(ix,iz)||1,sp=(keys.shift?(curSkin==='glitchlord'?18:8.5):(curSkin==='glitchlord'?11:6))*mag;
+let vx=ix/n*sp,vz=gameMode==='2d'?0:iz/n*sp;if(kickT>0)vx=kickDir*7;pl.spd=Math.hypot(vx,vz);if(vx||vz)pl.yaw=Math.atan2(-vz,vx);
+if(keys[' ']){if(pl.ground){pl.vy=curSkin==='glitchlord'?18:11;pl.ground=false;keys[' ']=false}else if(curSkin==='frog'&&pl.frogReady){pl.vy=10.5;pl.frogReady=false;keys[' ']=false;banner('🐸 2段ジャンプ！',650)}else if(wallTimer>0){pl.vy=12;kickDir=-wallDir;kickT=.16;wallTimer=0;keys[' ']=false}}
+const oy=pl.y,ox=pl.x;pl.vy-=26*dt;if(pl.gliding>0&&pl.vy< -2.2)pl.vy=-2.2;pl.x+=vx*dt;pl.z+=vz*dt;if(gameMode==='2d')pl.z=0;
+let touching=0;
+// 巨大エネルギーコア中は、接触した障害物を破壊できる
+if(pl.giantTimer>0){
+  for(const w of [...walls]){if(pl.x>w.x0-1.2&&pl.x<w.x1+1.2&&pl.z>w.z0-1&&pl.z<w.z1+1){lvl.remove(w.g);walls=walls.filter(q=>q!==w);bonus+=100;banner('💥 巨大パワーで壁を破壊！',450)}}
+  for(const h of stageHazards){if(h.destroyed)continue;const near=h.type==='bridge'?(pl.x>h.p.x0-1.3&&pl.x<h.p.x1+1.3&&Math.abs(pl.z)<D/2+1):(Math.hypot(pl.x-h.x,pl.z-h.z)<2.3);if(near){h.destroyed=true;lvl.remove(h.g);bonus+=150;banner('💥 障害物を破壊！',500)}}
+  for(const e of [...enemies]){if(e.st!=='squash'&&Math.hypot(pl.x-e.x,pl.z-e.z)<1.8){lvl.remove(e.g);enemies=enemies.filter(q=>q!==e);kill(200);banner('💥 敵を吹き飛ばした！',450)}}
+  for(const h of [...ghosts]){if(Math.hypot(pl.x-h.x,pl.z-h.z)<2){lvl.remove(h.g);ghosts=ghosts.filter(q=>q!==h);kill(250)}}
+}
+for(const w of walls)if(pl.y<w.top-.02&&pl.y+1.4>w.bottom&&pl.x>w.x0-.35&&pl.x<w.x1+.35&&pl.z>w.z0-.35&&pl.z<w.z1+.35){if(ox<=(w.x0+w.x1)/2){pl.x=w.x0-.35;touching=1}else{pl.x=w.x1+.35;touching=-1}}
+if(touching){wallDir=touching;if(!pl.ground){wallTimer=.12;if(pl.vy<-3&&(Math.abs(ix)>.3&&Math.sign(ix)===touching))pl.vy=-3}}
+pl.y+=pl.vy*dt;pl.ground=false;
+// グリッチ足場は自動生成しない。専用ボタンで手動設置する。
+if(pl.vy<=0){for(const p of platforms)if(oy>=p.top-.01&&pl.y<=p.top&&pl.x>p.x0-.3&&pl.x<p.x1+.3&&pl.z>p.z0-.3&&pl.z<p.z1+.3){pl.y=p.top;pl.vy=0;pl.ground=true;pl.pi=p.i;lastSafe={x:pl.x,y:p.top,z:pl.z,pi:p.i};if(curSkin==='frog'&&pl.frogReady===undefined)pl.frogReady=false}
+for(const w of walls)if(oy>=w.top-.01&&pl.y<=w.top&&pl.x>w.x0-.3&&pl.x<w.x1+.3&&pl.z>w.z0-.3&&pl.z<w.z1+.3){pl.y=w.top;pl.vy=0;pl.ground=true;pl.pi=w.p.i;lastSafe={x:pl.x,y:w.top,z:pl.z,pi:w.p.i}}}
+for(const h of stageHazards){if(h.destroyed)continue;h.t+=dt;
+if(h.type==='bridge'){
+  if(h.phase==='idle'&&pl.ground&&pl.pi===h.p.i&&pl.x>h.p.x0+.25&&pl.x<h.p.x1-.25){h.phase='warning';h.t=0;banner('⚠️ 橋が崩れる！ジャンプで逃げろ！',950)}
+  if(h.phase==='warning'){for(let i=0;i<h.boards.length;i++)h.boards[i].rotation.z=Math.sin(h.t*28+i)*.04;if(h.t>.8){h.phase='gone';platforms=platforms.filter(q=>q!==h.p);lvl.remove(h.p.g);lvl.remove(h.g);banner('💥 橋が崩壊！',700)}}
+  continue;
+}
+if(h.type==='bar')h.g.rotation.y+=dt*2.6;
+if(h.type==='pendulum'){const sw=h.g.userData.swing;const angle=Math.sin(h.t*2.6)*.82;if(gameMode==='2d'){sw.rotation.x=0;sw.rotation.z=-angle}else{sw.rotation.x=angle;sw.rotation.z=0}h.g.updateMatrixWorld(true);const bp=h.g.userData.ball.getWorldPosition(new T.Vector3());const horizontal=Math.hypot(pl.x-bp.x,pl.z-bp.z);const playerBottom=pl.y,playerTop=pl.y+1.4,ballBottom=bp.y-.5,ballTop=bp.y+.5;const verticalGap=Math.max(0,ballBottom-playerTop,playerBottom-ballTop);if(horizontal<.88&&verticalGap<.12&&pl.inv<=0){if(hit())return}continue}
+if(h.type==='lava'){const hot=Math.sin(h.t*2.2)>.45;h.g.children[2].material.color.setHex(hot?0xffc247:0xff4a18)}const dx=pl.x-h.x,dz=pl.z-h.z;let danger=false;if(h.type==='bar'){const a=h.g.rotation.y,along=Math.abs(dx*Math.cos(a)-dz*Math.sin(a)),across=Math.abs(dx*Math.sin(a)+dz*Math.cos(a));danger=along<1.65&&across<.62&&pl.y<h.top+1.25}else if(h.type==='spikes')danger=Math.abs(dx)<.85&&Math.abs(dz)<.9&&pl.y<h.top+.95;else danger=Math.abs(dx)<1.2&&Math.abs(dz)<.9&&pl.y<h.top+1.0;if(danger&&pl.inv<=0&&pl.giantTimer<=0){if(hit())return}}
+if(stepEnemies(dt,oy))return;updateNitaBear(dt);if(stepGhosts(dt))return;if(boss&&stepBoss(dt,oy))return;updateAbilityShots(dt);if(curSkin==='gold')score=Math.floor((meters()+bonus)*2);
+for(const c of crystals){c.m.rotation.y+=dt*2;if(!c.got&&Math.abs(pl.x-c.x)<.8&&Math.abs(pl.z-c.z)<.8&&Math.abs(pl.y+.7-c.y)<1.1){c.got=true;lvl.remove(c.m);gems++;bonus+=100;saveAll()}}
+for(const m of mushrooms){m.ph+=dt;m.g.position.y=m.by+Math.sin(m.ph*3)*.1;m.g.rotation.y+=dt*1.5;if(!m.got&&Math.abs(pl.x-m.x)<(m.giant?1.7:.9)&&Math.abs(pl.z-m.z)<(m.giant?1.7:.9)&&Math.abs(pl.y+.7-m.by)<(m.giant?1.8:1.2)){m.got=true;lvl.remove(m.g);if(m.giant){pl.giantTimer=10;pl.big=false;pl.inv=0;bonus+=500;banner('✨ 巨大化！10秒間パワーアップ！',1500)}else{if(pl.big)bonus+=200;pl.big=true;banner('🔷 パワーオーブGET！',900)}}}
+mushrooms=mushrooms.filter(m=>!m.got&&m.x>pl.x-30||(m.got&&false)||(!m.got&&m.x>pl.x-30));
+if(!boss&&!busy&&pl.ground&&meters()>=nextBoss){startBoss();return}
+if(!boss)dist=Math.max(dist,pl.x);score=Math.floor((meters()+bonus)*(curSkin==='gold'?2:1));maxHeight=Math.max(maxHeight,meters());
+if(!boss)while(nextX<pl.x+70)addPlatform();
+const cut=boss?-1e9:pl.x-30,keep=(a,f)=>a.filter(o=>{if(o.x1<cut&&!(o.isCheckpoint&&activeCheckpoint&&activeCheckpoint.platform===o)){lvl.remove(o.g);return false}return true});
+platforms=keep(platforms);walls=keep(walls);stageHazards=stageHazards.filter(h=>{if(h.p.x1<cut){lvl.remove(h.g);return false}return true});crystals=crystals.filter(c=>{if(c.x<cut){lvl.remove(c.m);return false}return true});
+enemies=enemies.filter(e=>{const d=e.p.x1<cut||(e.st==='squash'&&e.t<=0&&e.type!=='spike');if(d)lvl.remove(e.g);return!d});
+if(pl.y<-12){if(curSkin==='glitchlord'){fall();return}else if(curSkin==='pirate'&&abilityUses>0){abilityUses--;pl.x=lastSafe.x;pl.y=lastSafe.y+1.2;pl.z=lastSafe.z;pl.vy=13;pl.ground=false;pl.inv=1.4;banner('🏴‍☠️ 海賊船で救出！',1000);updateAbilityButton()}else{fall();return}}updateHUD()}
+function loop(t){const dt=Math.min(.03,(t-last)/1000);last=t;clock+=dt;update(dt);
+animPlayer(dt);if(pl.parachute){if(pl.gliding>0&&pl.parachute.parent)pl.parachute.position.set(pl.x,pl.y+3.0,pl.z);else{if(pl.parachute.parent)pl.parachute.parent.remove(pl.parachute);abilityVisuals=abilityVisuals.filter(q=>q!==pl.parachute);pl.parachute=null}}
+camY+=(pl.y-camY)*Math.min(1,dt*3);if(gameMode==='2d'){cam.position.set(pl.x-1.8,camY+1.8,24);cam.lookAt(pl.x+1.8,camY+1.0,0)}else{updateFreeCamera()}
+bg.position.x=pl.x-(pl.x*.3)%44;if(shake>0){cam.position.x+=(Math.random()-.5)*shake*.9;cam.position.y+=(Math.random()-.5)*shake*.9;shake=Math.max(0,shake-dt*1.6)}ren.render(scene,cam);if(shopOpen&&pvAv){pvAv.rotation.y=Math.sin(clock*1.5)*1.2;if(pvAv.userData.glitchBits){for(const q of pvAv.userData.glitchBits){const d=q.userData.glitchBit;q.position.x=d.x+Math.sin(clock*13+d.phase)*d.amp;q.position.y=d.y+Math.sin(clock*17+d.phase)*d.amp*1.8;q.position.z=d.z+Math.cos(clock*11+d.phase)*d.amp;q.rotation.x=clock*1.4+d.phase;q.rotation.y=clock*2.1+d.phase}for(const [i,r] of (pvAv.userData.glitchRings||[]).entries()){r.rotation.z=clock*(i?-.8:1.1);r.material.opacity=.62+.32*Math.sin(clock*10+i);r.material.transparent=true}for(const q of pvAv.userData.glitchStripes||[])q.visible=Math.sin(clock*24+q.userData.flicker*2)>-.55}{const j=clock%4>2.6,ph=clock*11,w=Math.sin(ph)*.8;j?pose(pvAv,.3,.7,-.4,2.6,2.6):pose(pvAv,.3,w,-w,-w*.8,w*.8)}pvRen.render(pvScene,pvCam)}requestAnimationFrame(loop)}
+onkeydown=e=>{const k=e.key.toLowerCase();if(k==='g'&&!e.repeat&&curSkin==='glitchlord'&&!shopOpen&&!ended){e.preventDefault();placeGlitchPlatform();return}if(k==='escape'&&shopOpen){closeShop();return}if(k==='enter'&&!e.repeat&&!shopOpen&&!ended){e.preventDefault();useAbility();return}if(ctrl==='tap'&&k!=='r')return;if(k===' '||k.startsWith('arrow'))e.preventDefault();keys[k]=true;if(k==='e'&&!shopOpen)useAbility();if(k==='r'&&!shopOpen)restart()};onkeyup=e=>keys[e.key.toLowerCase()]=false;
+document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key;b.onpointerdown=e=>{e.preventDefault();keys[k]=true};b.onpointerup=b.onpointerleave=b.onpointercancel=()=>keys[k]=false});
+const joy={fx:0,fz:0,m:0},st=$('stick'),kn=$('knob');let joyId=null;
+function joyMove(e){const r=st.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,R=r.width/2-8;let dx=e.clientX-cx,dy=e.clientY-cy,l=Math.hypot(dx,dy);if(l>R){dx*=R/l;dy*=R/l;l=R}kn.style.transform='translate('+dx+'px,'+dy+'px)';const m=l/R;joy.m=m<.15?0:m;joy.fz=dx/R;joy.fx=-dy/R}
+function joyEnd(){joyId=null;joy.m=0;joy.fx=joy.fz=0;kn.style.transform=''}
+st.onpointerdown=e=>{e.preventDefault();joyId=e.pointerId;st.setPointerCapture(e.pointerId);joyMove(e)};
+st.onpointermove=e=>{if(e.pointerId===joyId)joyMove(e)};
+st.onpointerup=st.onpointercancel=e=>{if(e.pointerId===joyId)joyEnd()};
+let ctrl='key';try{ctrl=localStorage.getItem('fallCtrl')||(matchMedia('(hover:none),(pointer:coarse)').matches?'tap':'key')}catch(e){}
+function setCtrl(c){ctrl=c;keys={};joyEnd();document.body.classList.toggle('tap',c==='tap');$('ctrlBtn').textContent='🎮 操作：'+(c==='tap'?'タップ':'キーボード');try{localStorage.setItem('fallCtrl',c)}catch(e){}}
+function toggleCtrl(){setCtrl(ctrl==='tap'?'key':'tap')}setCtrl(ctrl);
+const pvRen=new T.WebGLRenderer({canvas:$('pv'),antialias:true,alpha:true}),pvScene=new T.Scene(),pvCam=new T.PerspectiveCamera(38,1,.1,50);
+pvRen.setPixelRatio(2);pvRen.setSize(200,200,false);pvScene.add(new T.HemisphereLight(0xffffff,0x6688aa,1.1));const pdl=new T.DirectionalLight(0xffffff,.6);pdl.position.set(3,4,2);pvScene.add(pdl);pvCam.position.set(3.4,.95,0);pvCam.lookAt(0,.75,0);
+function renderShop(){const s=SKINS.find(x=>x.id===selSkin)||SKINS[0];if(pvAv)pvScene.remove(pvAv);pvAv=makeAvatar(s.id);pvScene.add(pvAv);
+$('shopGems').textContent='💎 '+gems;$('shopName').textContent=s.name;$('shopDesc').textContent=(s.desc||'')+'\n'+(s.id==='def'?'特性：なし':s.id==='gold'?'特性：ポイント2倍':(ABILITY_TEXT[s.id]||'特性：範囲衝撃波で周囲の敵を攻撃。')+' 1ゲーム最大3回')+'\n'+(curSkin===s.id?'✅ 現在装備中':owned.includes(s.id)?'🟢 購入済み・装備可能':s.price===0?'🎁 無料':`💎 ${s.price} クリスタル`);$('shopDesc').style.whiteSpace='pre-line';
+const L=$('shopList'),q=($('shopSearch').value||'').trim().toLowerCase();L.innerHTML='';const shown=SKINS.filter(k=>k.name.toLowerCase().includes(q)||String(k.price).includes(q)||k.desc.toLowerCase().includes(q));$('shopCount').textContent=`スキン ${shown.length} / ${SKINS.length} 種類　・　選んで詳細を確認！`;shown.forEach(k=>{const b=document.createElement('button');b.className=k.id===selSkin?'selected':'';const status=curSkin===k.id?'👕 装備中':owned.includes(k.id)?'✅ 所持':k.price===0?'🎁 無料':`💎 ${k.price}`;b.innerHTML=`<span class="skinName">${k.name}</span><span class="skinMeta">${status}</span>`;b.onclick=()=>{selSkin=k.id;renderShop()};L.appendChild(b)});
+const a=$('shopAct');if(curSkin===s.id){a.textContent='✅ 装備中';a.disabled=true}else if(owned.includes(s.id)){a.textContent='👕 このスキンを装備';a.disabled=false}else{a.textContent=s.price===0?'🎁 無料で入手':`💎 ${s.price} で購入`;a.disabled=gems<s.price}}
+function shopAct(){const s=SKINS.find(x=>x.id===selSkin);if(!owned.includes(s.id)){if(gems<s.price)return;gems-=s.price;owned.push(s.id)}const prevSkin=curSkin;curSkin=s.id;equip();if(curSkin==='golem'&&prevSkin!=='golem'){abilityUses=Math.max(abilityUses,8);pl.big=true}saveAll();updateHUD();updateAbilityButton();renderShop()}
+function openShop(){shopOpen=true;keys={};selSkin=curSkin;$('shopSearch').value='';$('shop').style.display='flex';renderShop()}
+function closeShop(){shopOpen=false;$('shop').style.display='none'}
+build();requestAnimationFrame(loop);
+</script>
+
+</body>
+</html>
